@@ -1,23 +1,22 @@
-from flask import Flask,request,render_template,redirect
+from flask import Flask,request,render_template,redirect,json,jsonify
 import vobject
 import re
 import Vcard
-
-
+import html,json
 
 cardList = []
 brokenCards = []
 parsedCards = []
 vcardlist = []
-
-
+jsoncontacts = []
+jsonStr = ''
 app = Flask(__name__)
 
 
 
 @app.route('/')
 def index():
-    return render_template("index.html")
+    return render_template("index.html",contacts=json)
 
 
 @app.route("/load", methods = ['POST'] )
@@ -80,6 +79,16 @@ def load_contacts():
 
 
     return redirect('/')
+
+
+@app.route("/get", methods = ['GET'] )
+def get_contacts():
+    global vcardlist,jsonStr
+
+    jsonStr = json.dumps([entry.get_json() for entry in vcardlist])
+
+    return jsonStr
+
 
 
 @app.route("/clear", methods = ['GET'] )
