@@ -1,9 +1,9 @@
 from collections import UserDict
 from email.headerregistry import Address
-from pickle import FALSE
-from flask import Flask, request
+from flask import Flask, render_template, request, Response
 from flask_sqlalchemy import SQLAlchemy
-
+import cv2
+from Camera import Camera
 
 from datetime import datetime
 
@@ -11,12 +11,10 @@ from datetime import datetime
 HOST = 'localhost'
 PORT = 5000
 
-
-
-
-
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://pi:Elwyn2021?!@localhost/autoplayback_db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
 
 #database table model for users
@@ -60,16 +58,55 @@ class Camera(db.Model):
     
     
     
+id = "1"
+name ="Livingroom Camera"
+username = "onvif"
+password = "onvif"
+camera_address = "192.168.0.90"
+width = "1024.0"
+height = "768.0"
+fps = "18.0"
 
 
+url = f"rtsp://{username}:{password}@{camera_address}/onvif-media/media.amp"
+
+capture = cv2.VideoCapture(url)
+
+app = Flask(__name__)
 
 
-
-#home route
 @app.route('/')
-def get_home():
-    return 'hej'
+def index():
+    return render_template('index.html')
 
+def generate_frames():
+    while True:
+            
+        success,frame = capture.read()
+        if not success:
+            break
+        else:
+            ret,buffer = cv2.imencode('.jpg',frame)
+            frame = buffer.tobytes()
+            #yield frame ?
+            yield(b'--frame\r\n'
+                    b'Content-Type: image/jpeg\r\n\r\n'
+                    + frame +b'\r\n')
+
+@app.route('/video')
+def get_stream():
+    return Response(generate_frames(),mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+
+
+@app.route('/axis')
+def motion():
+    print("MOTION")        
+    print("MOTION")  
+    print("MOTION")  
+    print("MOTION")  
+    return {'motion':'motiooon'}
 
 
 
@@ -108,13 +145,15 @@ def format_userdata(user):
 
 
 
-
+@app.route('/test')
+def test():
+    return {'cameras': 'camera1'}
 
 
 #login page route
 @app.route('/login', methods= ['GET'])
 def login_page():
-    return login.html
+    return render_template(login.html)
 
 #login submit request
 @app.route('/login', methods= ['POST'])
@@ -127,8 +166,8 @@ def login_request():
         return format_userdata(user)
     else:
         return 'Username not found'
- 
 
+    
 
 #get full list of camera configurations as json
 @app.route('/cameras', methods = ['GET'])
@@ -203,5 +242,5 @@ def update_camera(id):
     return f'Camera updated.'
 
 if __name__ == '__main__':
-    app.run(HOST,PORT)
+    app.run(host='0.0.0.0',debug=True)
     

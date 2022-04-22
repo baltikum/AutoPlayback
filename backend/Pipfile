@@ -9,6 +9,7 @@ flask-sqlalchemy = "*"
 psycopg2 = "*"
 python-dotenv = "*"
 flask-cors = "*"
+opencv-python = "*"
 
 [dev-packages]
 
