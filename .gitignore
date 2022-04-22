@@ -129,5 +129,5 @@ dmypy.json
 .pyre/
 
 
-.jpg
-.mp4
+*.jpg
+*.mp4
