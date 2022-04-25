@@ -1,15 +1,21 @@
 from collections import UserDict
 from email.headerregistry import Address
-from flask import Flask, render_template, request, Response
+import traceback
+from flask import Flask, render_template, request, Response,send_file,current_app
 from flask_sqlalchemy import SQLAlchemy
-import cv2
+import cv2, os , re,time
 from Camera import Camera
+import json,logging
 
 from datetime import datetime
 
 
 HOST = 'localhost'
 PORT = 5000
+SYSTEM_HOST = '192.168.0.5'
+SYSTEM_GW = '192.168.0.1'
+SYSTEM_NTP = '192.168.0.5'
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://pi:Elwyn2021?!@localhost/autoplayback_db'
@@ -39,7 +45,7 @@ class User(db.Model):
         
         
 #database table model for camera configurations
-class Camera(db.Model):
+class CameraEntry(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     name = db.Column(db.String(100),nullable=False,default='Camera')
     username = db.Column(db.String(50),nullable=False)
@@ -58,6 +64,9 @@ class Camera(db.Model):
     
     
     
+
+
+
 id = "1"
 name ="Livingroom Camera"
 username = "onvif"
@@ -74,11 +83,36 @@ capture = cv2.VideoCapture(url)
 
 app = Flask(__name__)
 
+running_cameras = []
+
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
+
+@app.route('/motion/<id>')
+def motion_id(id):
+    try: 
+        camera_id = int(id)
+        motion_activated(camera_id)
+        res = True
+    except:
+        trace = traceback.format_exc()
+        res = False
+        print(trace)
+
+def motion_activated(id):
+    global running_cameras
+    camera = running_cameras.get(id)
+    camera.record()
+    camera.motion_activated_at(time.time())
+    
+    
+
+
+
+#Live image stream jpeg backend
 def generate_frames():
     while True:
             
@@ -92,21 +126,54 @@ def generate_frames():
             yield(b'--frame\r\n'
                     b'Content-Type: image/jpeg\r\n\r\n'
                     + frame +b'\r\n')
-
 @app.route('/video')
 def get_stream():
     return Response(generate_frames(),mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 
+#Den nya inspelade mp4 streamern
+@app.after_request
+def after_request(response):
+    response.headers.add('Accept-Ranges', 'bytes')
+    return response
+def get_chunk(byte1=None, byte2=None):
+    full_path = "test.mp4"
+    file_size = os.stat(full_path).st_size
+    start = 0
+    
+    if byte1 < file_size:
+        start = byte1
+    if byte2:
+        length = byte2 + 1 - byte1
+    else:
+        length = file_size - start
 
-@app.route('/axis')
-def motion():
-    print("MOTION")        
-    print("MOTION")  
-    print("MOTION")  
-    print("MOTION")  
-    return {'motion':'motiooon'}
+    with open(full_path, 'rb') as f:
+        f.seek(start)
+        chunk = f.read(length)
+    return chunk, start, length, file_size
+@app.route('/playback')
+def playback():
+    range_header = request.headers.get('Range', None)
+    byte1, byte2 = 0, None
+    if range_header:
+        match = re.search(r'(\d+)-(\d*)', range_header)
+        groups = match.groups()
+
+        if groups[0]:
+            byte1 = int(groups[0])
+        if groups[1]:
+            byte2 = int(groups[1])
+       
+    chunk, start, length, file_size = get_chunk(byte1, byte2)
+    resp = Response(chunk, 206, mimetype='video/mp4',
+                      content_type='video/mp4', direct_passthrough=True)
+    resp.headers.add('Content-Range', 'bytes {0}-{1}/{2}'.format(start, start + length - 1, file_size))
+    return resp
+
+
+
 
 
 
@@ -130,7 +197,6 @@ def create_new_user():
     
     #returns data as json
     return format_userdata(user)
-
 #Format json for succesfull login requests
 def format_userdata(user):
     return {
@@ -142,19 +208,10 @@ def format_userdata(user):
         "device": user.device,
         "created_at": user.created_at
     }
-
-
-
-@app.route('/test')
-def test():
-    return {'cameras': 'camera1'}
-
-
 #login page route
 @app.route('/login', methods= ['GET'])
 def login_page():
     return render_template(login.html)
-
 #login submit request
 @app.route('/login', methods= ['POST'])
 def login_request():
@@ -166,9 +223,6 @@ def login_request():
         return format_userdata(user)
     else:
         return 'Username not found'
-
-    
-
 #get full list of camera configurations as json
 @app.route('/cameras', methods = ['GET'])
 def get_cameras():
@@ -177,7 +231,6 @@ def get_cameras():
     for camera in cameras:
         cameras_json.append(format_camera(camera))
     return {'cameras': cameras_json }
-
 #Format camera configurations to json
 def format_camera(camera):
     return {
@@ -189,7 +242,6 @@ def format_camera(camera):
         "address": camera.address,
         "added_at": camera.added_at
     }
-
 #Add new camera
 @app.route('/cameras', methods = ['POST'])
 def add_new_camera():
@@ -207,8 +259,6 @@ def add_new_camera():
     db.session.commit()
     
     return 'Camera added.'
-
-
 #delete camera by id
 @app.route('/cameras/<id>', methods= ['DELETE'])
 def delete_camera(id):
@@ -216,8 +266,6 @@ def delete_camera(id):
     db.session.delete(camera)
     db.session.commit()
     return 'Camera deleted.'
-
-
 #update camera by id
 @app.route('/cameras/<id>', methods= ['PUT'])
 def update_camera(id):
@@ -241,6 +289,43 @@ def update_camera(id):
     db.session.commit()
     return f'Camera updated.'
 
+
+
+
+def load_cameras():
+    global running_cameras
+    try:
+        file = open('camera_configurations.ini')
+        jsonData = file.read()
+        json_cameras = json.loads(jsonData)
+        list_of_cameras= json_cameras['cameras']
+        print(f'Loaded Cameras: {list_of_cameras}')
+        
+        for entry in list_of_cameras:
+            running_cameras.append(Camera(entry.get('ip'),entry.get('name'),entry.get('username'),
+                                          entry.get('password'),entry.get('settings'),SYSTEM_HOST,
+                                          SYSTEM_GW,SYSTEM_NTP))
+        res = True
+    except:
+        logging.exception('Camera configuration did not load.')
+        res = False
+        
+    return res
+
+def configure_cameras():
+    global running_cameras
+    for entry in running_cameras:
+        entry.configure_camera()
+        
+
 if __name__ == '__main__':
-    app.run(host='localhost',debug=True)
+
+    if load_cameras() :
+        res = configure_cameras()
+        
+    
+    
+    
+    
+    app.run(host='localhost',debug=True,threaded=True)
     

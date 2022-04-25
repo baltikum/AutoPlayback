@@ -8,6 +8,9 @@ return (
 	<div className="container">
 		<div className="form-holder">
 			<h1>Playback</h1>
+			<video autoPlay muted>
+				<source src="http://localhost:5000/videos" type="video/mp4" />
+			</video>
 		</div>
 	</div>
 );

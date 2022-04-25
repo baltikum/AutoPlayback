@@ -73,7 +73,7 @@ req = response.
 #print(pullpoint.PullMessages(req))
 
 """
-
+PORT = '80'
 
 #Camera object for each camera.
 class Camera():
@@ -89,11 +89,9 @@ class Camera():
         self.system_host = system_host
         self.system_gw = system_gw
         self.system_ntp = system_ntp
-
-        try:
-            self.configure_camera()
-        except:
-            traceback.print_exc()
+        self.camera = ''
+        self.camera_management = ''
+        self.url = ''
 
 
     #Initiate configuratin of device hardware
@@ -101,12 +99,8 @@ class Camera():
         try:
             
 
-            self.camera = ONVIFCamera(self.camera_address,self.port,self.username,self.password,wsdl_dir="/home/baltikum/WebCv2/venv/lib/python3.8/site-packages/wsdl")
+            self.camera = ONVIFCamera(self.camera_address,'80',self.username,self.password,wsdl_dir="/home/pi/python-onvif-zeep/wsdl")
             self.camera_management = self.camera.create_devicemgmt_service()
-
-            self.get_streaming_url()
-            self.create_streaming_profile()
-
             self.status = True
             self.camera_name = self.set_hostname(self.camera_name)
             self.device_info = self.get_device_info()
@@ -117,11 +111,13 @@ class Camera():
             self.NTPServer = self.set_ntp_server(self.system_ntp)
             self.allowedIP = []
             self.configure_ip_filtering(self.system_host)
+            
+            self.create_streaming_profile()
+            self.url = self.get_streaming_url()
+
             logging.info('Initiation complete')
-                    
-            del self.camera
             del self.camera_management
-            logging.info('Removed instances')
+            logging.info('Removed management instance')
         except:
             traceback.print_exc()
 
@@ -275,5 +271,3 @@ class Camera():
             return ''
         except:
             traceback.print_exc()
-
-      
