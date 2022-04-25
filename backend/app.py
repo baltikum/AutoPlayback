@@ -99,7 +99,7 @@ def after_request(response):
     response.headers.add('Accept-Ranges', 'bytes')
     return response
 def get_chunk(byte1=None, byte2=None):
-    full_path = "test.mp4"
+    full_path = "20220425_211355Vardagsrum.mp4"
     file_size = os.stat(full_path).st_size
     start = 0
     
@@ -252,7 +252,7 @@ def update_camera(id):
 
 
 
-
+#Load the camera configurations and start captures
 def load_cameras():
     global configured_cameras
     try:
@@ -288,7 +288,7 @@ def record_camera(id):
     global configured_cameras, capturing_cameras
     camera = capturing_cameras[id]
 
-    camera = cv2.VideoCapture(configured_cameras[id].url)
+    #camera = cv2.VideoCapture(configured_cameras[id].url)
     now = datetime.now()
     format = "%Y%m%d_%H%M%S"
     time = now.strftime(format)
@@ -296,14 +296,17 @@ def record_camera(id):
     codec = cv2.VideoWriter_fourcc(*'mp4v')
     fileout = cv2.VideoWriter(f'{time}{configured_cameras[id].camera_name}.mp4', codec, 20.0, (1024,  768))
     record = 0
+    motion = 0
     while(True):
         
         res, frame = camera.read()
         record += 1
         
-        if configured_cameras[id].motion :
+        if configured_cameras[id].camera_motion :
             fileout.write(frame)
             motion += 1
+            if motion > 300:
+                configured_cameras[id].camera_motion = False
         else:
             motion = 0
         
@@ -314,15 +317,21 @@ def record_camera(id):
     camera.release()
     fileout.release()
    
+#Motion route and add to threadpool
 def read_captures(id):
     executor.submit(record_camera(id)) 
     return True
 @app.route('/motion/<id>', methods=['POST'])
 def motion_detected(id):
     print(f'Motion notification received from {id}')
+    global capturing_cameras
+    
     try:
         id = int(id)
-        res = read_captures(id)
+        if id < len(capturing_cameras) and id >= 0:
+            res = read_captures(id)
+        else:
+            raise Exception('id is not in range')
     except:
         traceback.print_exc()
         res = False
@@ -336,6 +345,7 @@ if __name__ == '__main__':
         if configure_cameras():
             if start_cameras():
                 logging.info('Camera configuration loaded.')
+                record_camera(0)
     
     
     
