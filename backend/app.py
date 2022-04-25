@@ -1,12 +1,18 @@
-from collections import UserDict
-from email.headerregistry import Address
-import traceback
-from flask import Flask, render_template, request, Response,send_file,current_app
-from flask_sqlalchemy import SQLAlchemy
-import cv2, os , re,time
-from Camera import Camera
-import json,logging
+#from collections import UserDict
+#from email.headerregistry import AddressHeader
 
+from turtle import reset
+from flask import Flask, render_template, request, Response#,send_file,current_app
+from flask_sqlalchemy import SQLAlchemy
+import cv2, os, re, time, json, logging, traceback, datetime
+from time import strftime
+from Camera import Camera
+
+from concurrent.futures import ThreadPoolExecutor
+
+executor = ThreadPoolExecutor(8)
+
+app = Flask(__name__)
 from datetime import datetime
 
 
@@ -17,73 +23,22 @@ SYSTEM_GW = '192.168.0.1'
 SYSTEM_NTP = '192.168.0.5'
 
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://pi:Elwyn2021?!@localhost/autoplayback_db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db = SQLAlchemy(app)
-
-#database table model for users
-class User(db.Model):
-    id = db.Column(db.Integer,primary_key=True)
-    name = db.Column(db.String(100),nullable=False,default='User')
-    username = db.Column(db.String(50),nullable=False,unique=True)
-    password = db.Column(db.String(50),nullable=False)
-    email = db.Column(db.String(100),nullable=False,unique=True)
-    privilege = db.Column(db.String(10),nullable=False,default='user')
-    device = db.Column(db.String(20),nullable=True)
-    created_at = db.Column(db.DateTime, nullable=False,default=datetime.utcnow)
-    
-    def __repr__(self):
-        return f'User {self.name} joined the system {self.created_at}'
-    
-    def __init__(self,name,username,password,device):
-        self.name = name
-        self.username = username
-        self.password = password
-        self.device = device
-        
-        
-#database table model for camera configurations
-class CameraEntry(db.Model):
-    id = db.Column(db.Integer,primary_key=True)
-    name = db.Column(db.String(100),nullable=False,default='Camera')
-    username = db.Column(db.String(50),nullable=False)
-    password = db.Column(db.String(50),nullable=False)
-    address = db.Column(db.String(20),nullable=False, unique=True)
-    added_at = db.Column(db.DateTime, nullable=False,default=datetime.utcnow)
-    
-    def __repr__(self):
-        return f'Camera {self.id} {self.name} added at {self.created_at}'
-    
-    def __init__(self,name,username,password,address):
-        self.name = name
-        self.username = username
-        self.password = password
-        self.address = address
-    
-    
-    
 
 
+#Databas
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://pi:Elwyn2021?!@localhost/autoplayback_db'
+#app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+#db = SQLAlchemy(app)
 
-id = "1"
-name ="Livingroom Camera"
-username = "onvif"
-password = "onvif"
-camera_address = "192.168.0.90"
-width = "1024.0"
-height = "768.0"
-fps = "18.0"
-
-
-url = f"rtsp://{username}:{password}@{camera_address}/onvif-media/media.amp"
-
-capture = cv2.VideoCapture(url)
+#Exempel url
+#url = f"rtsp://{username}:{password}@{camera_address}/onvif-media/media.amp"
+#capture = cv2.VideoCapture(url)
 
 app = Flask(__name__)
 
-running_cameras = []
+
+configured_cameras = []
+capturing_cameras = []
 
 
 @app.route('/')
@@ -103,20 +58,26 @@ def motion_id(id):
         print(trace)
 
 def motion_activated(id):
-    global running_cameras
-    camera = running_cameras.get(id)
+    global configured_cameras
+    camera = configured_cameras.get(id)
     camera.record()
     camera.motion_activated_at(time.time())
     
     
 
-
-
+#IMG yield jpeg ström 
+'''
 #Live image stream jpeg backend
-def generate_frames():
+def generate_frames(id):
+    global capturing_cameras
+    try:
+        id = int(id)
+    except:
+        id= 0
+        
     while True:
             
-        success,frame = capture.read()
+        success,frame = capturing_cameras[id].read()
         if not success:
             break
         else:
@@ -126,10 +87,10 @@ def generate_frames():
             yield(b'--frame\r\n'
                     b'Content-Type: image/jpeg\r\n\r\n'
                     + frame +b'\r\n')
-@app.route('/video')
-def get_stream():
-    return Response(generate_frames(),mimetype='multipart/x-mixed-replace; boundary=frame')
-
+@app.route('/video/<id>')
+def get_stream(id):
+    return Response(generate_frames(id),mimetype='multipart/x-mixed-replace; boundary=frame')
+'''
 
 
 #Den nya inspelade mp4 streamern
@@ -293,7 +254,7 @@ def update_camera(id):
 
 
 def load_cameras():
-    global running_cameras
+    global configured_cameras
     try:
         file = open('camera_configurations.ini')
         jsonData = file.read()
@@ -302,7 +263,7 @@ def load_cameras():
         print(f'Loaded Cameras: {list_of_cameras}')
         
         for entry in list_of_cameras:
-            running_cameras.append(Camera(entry.get('ip'),entry.get('name'),entry.get('username'),
+            configured_cameras.append(Camera(int(entry.get('id')), entry.get('ip'), entry.get('name'), entry.get('username'),
                                           entry.get('password'),entry.get('settings'),SYSTEM_HOST,
                                           SYSTEM_GW,SYSTEM_NTP))
         res = True
@@ -311,19 +272,70 @@ def load_cameras():
         res = False
         
     return res
-
 def configure_cameras():
-    global running_cameras
-    for entry in running_cameras:
+    global configured_cameras
+    for entry in configured_cameras:
         entry.configure_camera()
+    return True
+def start_cameras():
+    global configured_cameras,capturing_cameras
+    for entry in configured_cameras:
+        capture = cv2.VideoCapture(entry.url)
+        capturing_cameras.append(capture)
         
+    return True       
+def record_camera(id):
+    global configured_cameras, capturing_cameras
+    camera = capturing_cameras[id]
 
+    camera = cv2.VideoCapture(configured_cameras[id].url)
+    now = datetime.now()
+    format = "%Y%m%d_%H%M%S"
+    time = now.strftime(format)
+
+    codec = cv2.VideoWriter_fourcc(*'mp4v')
+    fileout = cv2.VideoWriter(f'{time}{configured_cameras[id].camera_name}.mp4', codec, 20.0, (1024,  768))
+    record = 0
+    while(True):
+        
+        res, frame = camera.read()
+        record += 1
+        
+        if configured_cameras[id].motion :
+            fileout.write(frame)
+            motion += 1
+        else:
+            motion = 0
+        
+        if not res or record > 200:
+            break
+
+        
+    camera.release()
+    fileout.release()
+   
+def read_captures(id):
+    executor.submit(record_camera(id)) 
+    return True
+@app.route('/motion/<id>', methods=['POST'])
+def motion_detected(id):
+    print(f'Motion notification received from {id}')
+    try:
+        id = int(id)
+        res = read_captures(id)
+    except:
+        traceback.print_exc()
+        res = False
+    return res
+    
+    
+    
 if __name__ == '__main__':
 
-    if load_cameras() :
-        res = configure_cameras()
-        
-    
+    if load_cameras():
+        if configure_cameras():
+            if start_cameras():
+                logging.info('Camera configuration loaded.')
     
     
     

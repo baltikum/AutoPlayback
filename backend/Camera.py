@@ -77,10 +77,11 @@ PORT = '80'
 
 #Camera object for each camera.
 class Camera():
-    def __init__( self, camera_address ,camera_name ,username, password, settings,
+    def __init__( self, camera_id, camera_address ,camera_name ,username, password, settings,
                     system_host, system_gw, system_ntp ):
 
         self.status = False
+        self.camera_id = camera_id
         self.camera_address = camera_address
         self.camera_name = camera_name
         self.username = username
@@ -91,7 +92,7 @@ class Camera():
         self.system_ntp = system_ntp
         self.camera = ''
         self.camera_management = ''
-        self.url = ''
+        self.url = "rtsp://onvif:onvif@192.168.0.90/onvif-media/media.amp"
 
 
     #Initiate configuratin of device hardware
@@ -112,8 +113,8 @@ class Camera():
             self.allowedIP = []
             self.configure_ip_filtering(self.system_host)
             
-            self.create_streaming_profile()
-            self.url = self.get_streaming_url()
+            #self.create_streaming_profile()
+            #self.url = self.get_streaming_url()
 
             logging.info('Initiation complete')
             del self.camera_management
@@ -247,6 +248,8 @@ class Camera():
                     }, 
                 'ProfileToken': media_service.GetProfiles()[0].token
             })
+        
+        
         return str(uri.Uri)
 
     def create_streaming_profile(self):
@@ -259,12 +262,12 @@ class Camera():
             
             profmall.Name = 'autop_264'
             profmall.Token = 'autop_264'
-            print(profmall)
+            #print(profmall)
 
             #resp = media_service.CreateProfile(profmall)
             #print(resp)
 
-            print(self.camera.create_events_service().GetEventProperties())
+            #print(self.camera.create_events_service().GetEventProperties())
             
 
 
