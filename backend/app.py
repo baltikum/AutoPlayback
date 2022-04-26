@@ -6,8 +6,7 @@ from flask import Flask, render_template, request, Response#,send_file,current_a
 from flask_sqlalchemy import SQLAlchemy
 import cv2, os, re, time, json, logging, traceback, datetime
 from time import strftime
-from Camera import Camera
-
+import Camera, Presence
 from concurrent.futures import ThreadPoolExecutor
 
 executor = ThreadPoolExecutor(8)
@@ -39,7 +38,7 @@ app = Flask(__name__)
 
 configured_cameras = []
 capturing_cameras = []
-
+presence_active = False
 
 @app.route('/')
 def index():
@@ -295,20 +294,25 @@ def record_camera(id):
 
     codec = cv2.VideoWriter_fourcc(*'mp4v')
     fileout = cv2.VideoWriter(f'{time}{configured_cameras[id].camera_name}.mp4', codec, 20.0, (1024,  768))
+    
+    res, frame = camera.read()
+    buffer = []
+    buffer_max_size = configured_cameras[id].fps * 3 # 3 seconds * 18fps max images 3*18*1280*720 /8   /1000  /1000 ~ 6.2 MB buffer per cam
+    
     record = 0
     motion = 0
     while(True):
         
         res, frame = camera.read()
+        buffer.append(frame)
+        
         record += 1
         
         if configured_cameras[id].camera_motion :
-            fileout.write(frame)
-            motion += 1
-            if motion > 300:
-                configured_cameras[id].camera_motion = False
+            fileout.write(buffer.pop(0)) #Write
         else:
-            motion = 0
+            if len(buffer) >= buffer_max_size:
+                buffer.pop(0) #Discard
         
         if not res or record > 200:
             break
@@ -338,6 +342,21 @@ def motion_detected(id):
     return res
     
     
+#Connection to presence module
+@app.route('/presence/<active>', methods=['POST'])
+def presence_detected(active):
+    global presence_active
+    try:
+        active = int(active)
+    except:
+        logging.critical('Presence detection failed.')
+    if active == 0:
+        presence_active = False
+    elif active == 1:
+        presence_active = True
+    return  
+
+      
     
 if __name__ == '__main__':
 
@@ -345,9 +364,18 @@ if __name__ == '__main__':
         if configure_cameras():
             if start_cameras():
                 logging.info('Camera configuration loaded.')
-                record_camera(0)
-    
-    
+                #record_camera(0)
+            else:
+                logging.error('Cameras could not be started.')
+        else:
+            logging.error('Cameras could not be configured')
+    else:
+        logging.error('Cameras could not be loaded from configuration file.')
+        
+        
+        
+        
+
     
     app.run(host='localhost',debug=True,threaded=True)
     

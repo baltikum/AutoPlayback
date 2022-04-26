@@ -87,6 +87,7 @@ class Camera():
         self.username = username
         self.password = password
         self.settings = settings
+        self.fps = 18 # From settings laters on
         self.system_host = system_host
         self.system_gw = system_gw
         self.system_ntp = system_ntp
