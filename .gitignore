@@ -131,3 +131,6 @@ dmypy.json
 
 *.jpg
 *.mp4
+/backend/__pychache__
+/node_modules
+
