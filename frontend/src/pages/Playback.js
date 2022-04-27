@@ -1,16 +1,14 @@
 import React from "react";
 
 import '../components/css/container.css'
-import '../components/css/form-holder.css'
+import '../components/css/video-layout.css'
 
-const Playback = () => {
+const Playback = (playbacks) => {
 return (
 	<div className="container">
-		<div className="form-holder">
+		<div className="video-layout">
 			<h1>Playback</h1>
-			<video autoPlay muted>
-				<source src="http://localhost:5000/videos" type="video/mp4" />
-			</video>
+			<VideoPlayback playbacks={playbacks} />
 		</div>
 	</div>
 );
