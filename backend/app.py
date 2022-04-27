@@ -40,7 +40,7 @@ configured_cameras = []
 capturing_cameras = []
 presence_active = False
 
-recorded_video = []
+recorded_video = [{'id':0,'name':'Vardagsrum', 'time':'20220422','file':'filnamn.mp4'}]
 archived_video_playback = [] #Should be written to file or database
 
 @app.route('/')
@@ -391,7 +391,7 @@ def presence_detected(active):
 @app.route('/playback/fetch', methods=['GET'])
 def serve_playback():
     global recorded_video
-    return recorded_video
+    return json.dumps(recorded_video)
     
 if __name__ == '__main__':
 
