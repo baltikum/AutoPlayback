@@ -40,6 +40,9 @@ configured_cameras = []
 capturing_cameras = []
 presence_active = False
 
+recorded_video = []
+archived_video_playback = [] #Should be written to file or database
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -284,23 +287,24 @@ def start_cameras():
         
     return True       
 def record_camera(id):
-    global configured_cameras, capturing_cameras
+    global configured_cameras, capturing_cameras,presence_active,recorded_video
     camera = capturing_cameras[id]
 
     #camera = cv2.VideoCapture(configured_cameras[id].url)
     now = datetime.now()
     format = "%Y%m%d_%H%M%S"
-    time = now.strftime(format)
-
-    codec = cv2.VideoWriter_fourcc(*'mp4v')
-    fileout = cv2.VideoWriter(f'{time}{configured_cameras[id].camera_name}.mp4', codec, 20.0, (1024,  768))
+    time_formated = now.strftime(format)
+    fileName = f'{time_formated}{configured_cameras[id].camera_name}.mp4'
     
+    codec = cv2.VideoWriter_fourcc(*'mp4v')
+    fileout = cv2.VideoWriter(fileName, codec, 20.0, (1024,  768))
+  
     res, frame = camera.read()
     buffer = []
     buffer_max_size = configured_cameras[id].fps * 3 # 3 seconds * 18fps max images 3*18*1280*720 /8   /1000  /1000 ~ 6.2 MB buffer per cam
     
     record = 0
-    motion = 0
+    
     while(True):
         
         res, frame = camera.read()
@@ -308,18 +312,37 @@ def record_camera(id):
         
         record += 1
         
-        if configured_cameras[id].camera_motion :
-            fileout.write(buffer.pop(0)) #Write
-        else:
-            if len(buffer) >= buffer_max_size:
-                buffer.pop(0) #Discard
         
-        if not res or record > 200:
+        if not res or record > 200 or presence_active:
             break
+        else:      
+            #Requires camera_motion to be stable 
+            #from motion til x seconds after motion
+            if configured_cameras[id].camera_motion :
+                fileout.write(buffer.pop(0)) #Write
+            else:
+                if len(buffer) >= buffer_max_size:
+                    buffer.pop(0) #Discard
+        
 
         
-    camera.release()
+    #camera.release() Not needed anymore
+    
+
+    video_playback_entry = {
+        'video_time':time_formated,
+        'video_camera_id': id,
+        'video_file': fileName
+        }
+    
+  
+    recorded_video.append(video_playback_entry)
     fileout.release()
+    
+    #Call itself to reinitiate a buffer session and new file
+    if not presence_active:
+        read_captures(id)
+   
    
 #Motion route and add to threadpool
 def read_captures(id):
@@ -345,18 +368,30 @@ def motion_detected(id):
 #Connection to presence module
 @app.route('/presence/<active>', methods=['POST'])
 def presence_detected(active):
-    global presence_active
+    global presence_active,configured_cameras,archived_video_playback,recorded_video
     try:
         active = int(active)
     except:
         logging.critical('Presence detection failed.')
-    if active == 0:
+    if active == 0: #Away
         presence_active = False
-    elif active == 1:
+        archived_video_playback.append(recorded_video)
+        recorded_video = []
+        try:
+            for entry in configured_cameras:
+                res = read_captures(entry.id)
+        except:
+            logging.error('Camera failed to record')
+            
+    elif active == 1: #Home
         presence_active = True
     return  
 
-      
+
+@app.route('/playback/fetch', methods=['GET'])
+def serve_playback():
+    global recorded_video
+    return recorded_video
     
 if __name__ == '__main__':
 

@@ -32,7 +32,6 @@ class Presence():
         self.full_command = full_command
         return True
 
-
     def run_presence(self):
             
         cec.init()
@@ -41,7 +40,7 @@ class Presence():
         while True:
             p = subprocess.Popen(self.full_command, stdout=subprocess.PIPE, shell=True)
             
-            (output, err) = p.communicate()
+            output, err = p.communicate()
             p_status = p.wait()
             
             if output:
