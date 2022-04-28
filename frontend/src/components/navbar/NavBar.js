@@ -6,16 +6,16 @@ const NavBar = () => {
 		<>
 		<Nav>
 			<NavMenu>
-			<NavLink to="/live" activeStyle>
+			<NavLink to="/live">
 				<i className="bi-play-fill"></i> Live
 			</NavLink>
-			<NavLink to="/recorded" activeStyle>
+			<NavLink to="/recorded">
 				<i className="bi-disc-fill"></i> Recorded
 			</NavLink>
-			<NavLink to="/settings" activeStyle>
+			<NavLink to="/settings">
 				<i className="bi-sliders"></i> Settings
 			</NavLink>
-			<NavLink to="/login" activeStyle>
+			<NavLink to="/login">
 				<i className="bi-x-circle-fill"></i> Login
 			</NavLink>
 			</NavMenu>

@@ -1,6 +1,6 @@
 import React from "react";
 import '../components/css/container.css'
-import '../components/css/form-holder.css'
+import '../components/css/video-holder.css'
 
 /*const url = 'http://root:Examen2022?!@192.168.0.90/mjpg/video.mjpg'*/
 
@@ -9,9 +9,9 @@ import '../components/css/form-holder.css'
 const Live = () => {
 return (
 	<div className="container">
-		<div className="form-holder">
+		<div className="video-holder">
 			<h1>Live</h1>
-			<img src={'/live/0'} />
+			<img src={'/live/0'} alt="Live Video"/>
 			
 		</div>
 	</div>

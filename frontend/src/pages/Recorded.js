@@ -1,13 +1,16 @@
 import React from "react";
 
 import '../components/css/container.css'
-import '../components/css/form-holder.css'
+import '../components/css/video-holder.css'
 
 const Recorded = () => {
 return (
 	<div className="container">
-		<div className="form-holder">
+		<div className="video-holder">
 			<h1>Recorded</h1>
+            <video autoPlay muted>
+                  <source src={'/playback'} type="video/mp4" />
+            </video>
 		</div>
 	</div>
 );

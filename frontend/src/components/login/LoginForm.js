@@ -1,27 +1,24 @@
 import React from 'react'
+import '../css/form-holder.css'
 
 
-const handleSubmit = (event) => {
-    event.preventDefault()
-}
-const handleUsernameChange = (event) => {
-}
 
-const handlePasswordChange = (event) => {
-}
+const LoginForm = (postSubmit) => {
 
-
-const LoginForm = () => {
+    function handleSubmit(event) {
+        postSubmit(event)
+    }
+    
     return (
         <div>
             <form onSubmit={handleSubmit}>
 
                         <div className="input-group input-group-lg">
-                            <input type="text" className="form-control inputadd"  onChange={handleUsernameChange} required></input>
+                            <input type="text" name="user" className="form-control input-add" required></input>
                         </div>
 
                         <div className="input-group input-group-lg">
-                            <input type="password" className="form-control input-adding" onChange={handlePasswordChange} required></input>
+                            <input type="password" name="passw" className="form-control input-add" required></input>
                         </div>
 
                         <br></br>

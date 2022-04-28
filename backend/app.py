@@ -1,13 +1,16 @@
 #from collections import UserDict
 #from email.headerregistry import AddressHeader
 
-#from turtle import reset
-from flask import Flask, render_template, request, Response,url_parse#,send_file,current_app
+from turtle import reset
+from flask import Flask, render_template, request, Response#,send_file,current_app
 from flask_sqlalchemy import SQLAlchemy
 import cv2, os, re, time, json, logging, traceback, datetime
 from time import strftime
-import Camera, Presence
+from Presence import Presence
+from Camera import Camera
 from concurrent.futures import ThreadPoolExecutor
+import uuid
+
 
 executor = ThreadPoolExecutor(8)
 
@@ -41,7 +44,7 @@ capturing_cameras = []
 presence_active = False
 
 
-recorded_video = [{'id':0,'name':'Vardagsrum', 'time':'20220422','file':'filnamn.mp4'}]
+video_playback_entrys = [{'id':0,'name':'Vardagsrum', 'time':'20220422','file':'filnamn.mp4'}]
 archived_video_playback = [] #Should be written to database
 
 @app.route('/')
@@ -59,7 +62,6 @@ def motion_id(id):
         trace = traceback.format_exc()
         res = False
         print(trace)
-
 def motion_activated(id):
     global configured_cameras
     camera = configured_cameras.get(id)
@@ -102,7 +104,7 @@ def after_request(response):
     response.headers.add('Accept-Ranges', 'bytes')
     return response
 def get_chunk(byte1=None, byte2=None):
-    full_path = "20220425_211355Vardagsrum.mp4"
+    full_path = "0.mp4"
     file_size = os.stat(full_path).st_size
     start = 0
     
@@ -259,8 +261,9 @@ def update_camera(id):
 def load_cameras():
     global configured_cameras
     try:
-        file = open('camera_configurations.ini')
-        jsonData = file.read()
+        with open('/home/pi/AutoPlayback/backend/camera_configurations.ini', 'r') as file:
+            jsonData = file.read()
+            
         json_cameras = json.loads(jsonData)
         list_of_cameras= json_cameras['cameras']
         print(f'Loaded Cameras: {list_of_cameras}')
@@ -274,6 +277,8 @@ def load_cameras():
         logging.exception('Camera configuration did not load.')
         res = False
         
+    file.close()
+    
     return res
 def configure_cameras():
     global configured_cameras
@@ -288,14 +293,18 @@ def start_cameras():
         
     return True       
 def record_camera(id):
-    global configured_cameras, capturing_cameras,presence_active,recorded_video
+    global configured_cameras, capturing_cameras,presence_active,video_playback_entrys
     camera = capturing_cameras[id]
 
+    start_time = False
+        
     #camera = cv2.VideoCapture(configured_cameras[id].url)
     now = datetime.now()
     format = "%Y%m%d_%H%M%S"
     time_formated = now.strftime(format)
-    fileName = f'{time_formated}{configured_cameras[id].camera_name}.mp4'
+    
+    recording_uuid = uuid.uuid4()
+    fileName = f'{recording_uuid}_{configured_cameras[id].camera_name}.mp4'
     
     codec = cv2.VideoWriter_fourcc(*'mp4v')
     fileout = cv2.VideoWriter(fileName, codec, 20.0, (1024,  768))
@@ -305,6 +314,7 @@ def record_camera(id):
     buffer_max_size = configured_cameras[id].fps * 3 # 3 seconds * 18fps max images 3*18*1280*720 /8   /1000  /1000 ~ 6.2 MB buffer per cam
     
     record = 0
+    recording_started_at = ''
     
     while(True):
         
@@ -320,25 +330,40 @@ def record_camera(id):
             #Requires camera_motion to be stable 
             #from motion til x seconds after motion
             if configured_cameras[id].camera_motion :
+                
+                if not start_time:
+                    now = datetime.now()
+                    format = "%Y%m%d_%H%M%S"
+                    recording_started_at = now.strftime(format)
+                    start_time = True
+                    
                 fileout.write(buffer.pop(0)) #Write
             else:
-                if len(buffer) >= buffer_max_size:
-                    buffer.pop(0) #Discard
+                if not start_time:
+                    if len(buffer) >= buffer_max_size:
+                        buffer.pop(0) #Discard
+                else:
+                    #Add delay here, ex record some seconds after motion
+                    break
         
 
         
     #camera.release() Not needed anymore
+    now = datetime.now()
+    format = "%Y%m%d_%H%M%S"
+    recording_ended_at = now.strftime(format)
     
-
+    fileout.release()
+    
+    #Add to playback
     video_playback_entry = {
-        'video_time':time_formated,
+        'video_uuid': recording_uuid,
+        'video_start_time': recording_started_at,
+        'video_end_time': recording_ended_at,
         'video_camera_id': id,
         'video_file': fileName
         }
-    
-  
-    recorded_video.append(video_playback_entry)
-    fileout.release()
+    video_playback_entrys.append(video_playback_entry)
     
     #Call itself to reinitiate a buffer session and new file
     if not presence_active:
@@ -369,15 +394,15 @@ def motion_detected(id):
 #Connection to presence module
 @app.route('/presence/<active>', methods=['POST'])
 def presence_detected(active):
-    global presence_active,configured_cameras,archived_video_playback,recorded_video
+    global presence_active,configured_cameras,archived_video_playback,video_playback_entrys
     try:
         active = int(active)
     except:
         logging.critical('Presence detection failed.')
     if active == 0: #Away
         presence_active = False
-        archived_video_playback.append(recorded_video)
-        recorded_video = []
+        archived_video_playback.append(video_playback_entrys)
+        video_playback_entrys = []
         try:
             for entry in configured_cameras:
                 res = read_captures(entry.id)
@@ -391,20 +416,21 @@ def presence_detected(active):
 
 @app.route('/playback/fetch', methods=['GET'])
 def serve_playback():
-    global recorded_video
-    return json.dumps(recorded_video)
+    global video_playback_entrys
+    return json.dumps(video_playback_entrys)
     
 if __name__ == '__main__':
 
     if load_cameras():
-        if configure_cameras():
-            if start_cameras():
-                logging.info('Camera configuration loaded.')
-                #record_camera(0)
-            else:
-                logging.error('Cameras could not be started.')
+        #if configure_cameras():
+        if start_cameras():
+            logging.info('Camera configuration loaded.')
+            #record_camera(0)
         else:
-            logging.error('Cameras could not be configured')
+            logging.error('Cameras could not be started.')
+            
+        #else:
+            #logging.error('Cameras could not be configured')
     else:
         logging.error('Cameras could not be loaded from configuration file.')
         

@@ -19,27 +19,12 @@ import Login from './pages/Login';
 require('dotenv').config()
 
 function App() {
-      const [playbacks,setPlayback] = useState([])
-
-
-      /* Fetches array with info about recordings files*/
-      const fetchPlayback = async () => {
-            axios.get('/playback/fetch').then(
-                  (response) => {
-                        setPlayback(response.data)
-                        console.log(response.data);
-                  },
-                  (error) => {
-                        console.log(error);
-                  }
-            ); 
-      }
-      useEffect(() => {
-            fetchPlayback()
-      },[]);
 
 
 
+
+
+  
 
 
       return (
@@ -49,7 +34,7 @@ function App() {
                   <NavBar />
 
                   <Routes>
-                        <Route exact path='/' element={<Playback playbacks={playbacks} />} />
+                        <Route exact path='/' element={<Playback />} />
                         <Route path='/live' element={<Live />} />
                         <Route path='/recorded' element={<Recorded/>} />
                         <Route path='/settings' element={<Settings/>} />
