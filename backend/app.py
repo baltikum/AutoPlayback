@@ -104,7 +104,7 @@ def after_request(response):
     response.headers.add('Accept-Ranges', 'bytes')
     return response
 def get_chunk(byte1=None, byte2=None):
-    full_path = "0.mp4"
+    full_path = "/home/pi/AutoPlayback/backend/0.mp4"
     file_size = os.stat(full_path).st_size
     start = 0
     
@@ -115,10 +115,11 @@ def get_chunk(byte1=None, byte2=None):
     else:
         length = file_size - start
 
-    with open(full_path, 'rb') as f:
-        f.seek(start)
-        chunk = f.read(length)
+    with open(full_path, 'rb') as file:
+        file.seek(start)
+        chunk = file.read(length)
     return chunk, start, length, file_size
+
 @app.route('/playback')
 def playback():
     range_header = request.headers.get('Range', None)
