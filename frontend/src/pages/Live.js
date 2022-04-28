@@ -11,7 +11,7 @@ return (
 	<div className="container">
 		<div className="form-holder">
 			<h1>Live</h1>
-
+			<img src={'/live/0'} />
 			
 		</div>
 	</div>

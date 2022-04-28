@@ -1,8 +1,8 @@
 #from collections import UserDict
 #from email.headerregistry import AddressHeader
 
-from turtle import reset
-from flask import Flask, render_template, request, Response#,send_file,current_app
+#from turtle import reset
+from flask import Flask, render_template, request, Response,url_parse#,send_file,current_app
 from flask_sqlalchemy import SQLAlchemy
 import cv2, os, re, time, json, logging, traceback, datetime
 from time import strftime
@@ -40,8 +40,9 @@ configured_cameras = []
 capturing_cameras = []
 presence_active = False
 
+
 recorded_video = [{'id':0,'name':'Vardagsrum', 'time':'20220422','file':'filnamn.mp4'}]
-archived_video_playback = [] #Should be written to file or database
+archived_video_playback = [] #Should be written to database
 
 @app.route('/')
 def index():
@@ -68,7 +69,7 @@ def motion_activated(id):
     
 
 #IMG yield jpeg ström 
-'''
+
 #Live image stream jpeg backend
 def generate_frames(id):
     global capturing_cameras
@@ -89,10 +90,10 @@ def generate_frames(id):
             yield(b'--frame\r\n'
                     b'Content-Type: image/jpeg\r\n\r\n'
                     + frame +b'\r\n')
-@app.route('/video/<id>')
+@app.route('/live/<id>')
 def get_stream(id):
     return Response(generate_frames(id),mimetype='multipart/x-mixed-replace; boundary=frame')
-'''
+
 
 
 #Den nya inspelade mp4 streamern
