@@ -29,30 +29,26 @@ class Camera():
 
     #Initiate configuratin of device hardware
     def configure_camera(self):
-        try:
+      self.camera = ONVIFCamera(self.camera_address,'80',self.username,self.password,wsdl_dir="/home/pi/python-onvif-zeep/wsdl")
+      self.camera_management = self.camera.create_devicemgmt_service()
+      self.status = True
+      self.camera_name = self.set_hostname(self.camera_name)
+      self.device_info = self.get_device_info()
+      self.system_gw = self.set_gateway(self.system_gw)
+      self.date_set = ''
+      self.time_set = ''
+      self.set_device_date_and_time()
+      self.NTPServer = self.set_ntp_server(self.system_ntp)
+      self.allowedIP = []
+      self.configure_ip_filtering(self.system_host)
             
+      #self.create_streaming_profile()
+      #self.url = self.get_streaming_url()
 
-            self.camera = ONVIFCamera(self.camera_address,'80',self.username,self.password,wsdl_dir="/home/pi/python-onvif-zeep/wsdl")
-            self.camera_management = self.camera.create_devicemgmt_service()
-            self.status = True
-            self.camera_name = self.set_hostname(self.camera_name)
-            self.device_info = self.get_device_info()
-            self.system_gw = self.set_gateway(self.system_gw)
-            self.date_set = ''
-            self.time_set = ''
-            self.set_device_date_and_time()
-            self.NTPServer = self.set_ntp_server(self.system_ntp)
-            self.allowedIP = []
-            self.configure_ip_filtering(self.system_host)
-            
-            #self.create_streaming_profile()
-            #self.url = self.get_streaming_url()
+      logging.info('Initiation complete')
+      del self.camera_management
+      logging.info('Removed management instance')
 
-            logging.info('Initiation complete')
-            del self.camera_management
-            logging.info('Removed management instance')
-        except:
-            traceback.print_exc()
 
     #Set hostname
     def set_hostname(self,hostname):

@@ -3,12 +3,12 @@
 from pack import app
 
 from datetime import datetime
-import cv2, uuid, json, logging
+import cv2, uuid, logging, traceback
 
 from pack.sys_variables import Sys_variables
 from pack.db_models import User,Recordings,CameraConfigs
 from pack.presence import Presence
-from pack.camera import Camera
+from pack.load_cameras import Load_Cameras
 
 from concurrent.futures import ThreadPoolExecutor
 
@@ -29,32 +29,8 @@ executor = ThreadPoolExecutor()
 video_playback_entrys = [{'id':0,'name':'Vardagsrum', 'time':'20220422','file':'filnamn.mp4'}]
 archived_video_playback = [] #Should be written to database
 
-#Load the camera configurations and start captures
-def load_cameras():
-    global configured_cameras
-    try:
-        with open('/home/pi/AutoPlayback/backend/camera_configurations.ini', 'r') as file:
-            jsonData = file.read()
-            
-        json_cameras = json.loads(jsonData)
-        list_of_cameras= json_cameras['cameras']
-        print(f'Loaded Cameras: {list_of_cameras}')
-        
-        for entry in list_of_cameras:
-            configured_cameras.append(Camera(int(entry.get('id')), entry.get('ip'), entry.get('name'), entry.get('username'),
-                                          entry.get('password'),entry.get('settings'),SYSTEM_HOST,
-                                          SYSTEM_GW,SYSTEM_NTP))
-        res = True
-    except:
-        logging.exception('Camera configuration did not load.')
-        res = False
-        
-    return res   
-def configure_cameras():
-    global configured_cameras
-    for entry in configured_cameras:
-        entry.configure_camera()
-    return True
+  
+
 def start_cameras():
     global configured_cameras,capturing_cameras
     for entry in configured_cameras:
@@ -139,18 +115,27 @@ def record_camera(id):
 if __name__ == '__main__':
       
       SYSTEM_SETTINGS = Sys_variables()
+      system_cameras = Load_Cameras(SYSTEM_SETTINGS)
+
+      if not SYSTEM_SETTINGS.cameras_configured :
+            try:
+                  for camera in system_cameras.loaded_cameras:
+                        camera.configure_camera()
+
+                  SYSTEM_SETTINGS.cameras_configured = True
+            except:
+                  traceback.print_exc()
+
+            
 
 
-      if load_cameras():
-            #if configure_cameras():
             if start_cameras():
                   logging.info('Camera configuration loaded.')
                   #record_camera(0)
             else:
                   logging.error('Cameras could not be started.')
                   
-            #else:
-                  #logging.error('Cameras could not be configured')
+            
       else:
             logging.error('Cameras could not be loaded from configuration file.')
             
