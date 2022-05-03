@@ -3,76 +3,6 @@ import traceback
 from onvif import ONVIFCamera
 from datetime import datetime
 
-
-
-
-
-
-
-"""
-
-
-
-
-
-
-#Satta uppgifter
-Manufacturer = 'Not available'
-Model = 'Not available'
-FirmwareVersion = 'XXXX'
-SerialNumber = 'XXXX'
-
-
-Hostname = 'Unnamed'
-NTPServer = '0.0.0.0'
-Date_set = {
-            'Year': 0,
-            'Month': 0,
-            'Day': 0
-        }
-Time_set = {
-            'Hour': 0,
-            'Minute': 0,
-            'Second': 0
-        }
-AllowedIP = []
-
-
-
-
-
-
-
-#Initiera onvif instans
-kamera = ONVIFCamera(camera_address,port,username,password,wsdl_dir="/home/baltikum/WebCv2/venv/lib/python3.8/site-packages/wsdl")
-#device management instans på aktuell kamera
-kamera_management = kamera.create_devicemgmt_service()
-"""
-
-
-"""
-kamera_event = kamera.create_events_service()
-
-response = kamera_event.GetEventProperties()
-print('------------')
-print(str(response))
-
-#kamera_event.CreatePullPointSubscription()
-#print(str(hej))
-pullpoint = kamera.create_pullpoint_service()
-print('------------')
-#print(str(pullpoint))
-pullpointsubscription = kamera_event.CreatePullPointSubscription()
-print('------------')
-print(str(pullpointsubscription))
-
-req = response.
-
-#req = pullpoint.create_type('PullMessages') # Exception: No element 'PullMessages' in namespace http://docs.oasis-open.org/wsrf/rw-2. Available elements are:  - 
-#req.MessageLimit=100
-#print(pullpoint.PullMessages(req))
-
-"""
 PORT = '80'
 
 #Camera object for each camera.
@@ -276,3 +206,78 @@ class Camera():
             return ''
         except:
             traceback.print_exc()
+
+
+
+
+
+
+
+
+
+
+"""
+
+
+
+
+
+
+#Satta uppgifter
+Manufacturer = 'Not available'
+Model = 'Not available'
+FirmwareVersion = 'XXXX'
+SerialNumber = 'XXXX'
+
+
+Hostname = 'Unnamed'
+NTPServer = '0.0.0.0'
+Date_set = {
+            'Year': 0,
+            'Month': 0,
+            'Day': 0
+        }
+Time_set = {
+            'Hour': 0,
+            'Minute': 0,
+            'Second': 0
+        }
+AllowedIP = []
+
+
+
+
+
+
+
+#Initiera onvif instans
+kamera = ONVIFCamera(camera_address,port,username,password,wsdl_dir="/home/baltikum/WebCv2/venv/lib/python3.8/site-packages/wsdl")
+#device management instans på aktuell kamera
+kamera_management = kamera.create_devicemgmt_service()
+"""
+
+
+"""
+
+kamera_event = kamera.create_events_service()
+
+response = kamera_event.GetEventProperties()
+print('------------')
+print(str(response))
+
+#kamera_event.CreatePullPointSubscription()
+#print(str(hej))
+pullpoint = kamera.create_pullpoint_service()
+print('------------')
+#print(str(pullpoint))
+pullpointsubscription = kamera_event.CreatePullPointSubscription()
+print('------------')
+print(str(pullpointsubscription))
+
+req = response.
+
+#req = pullpoint.create_type('PullMessages') # Exception: No element 'PullMessages' in namespace http://docs.oasis-open.org/wsrf/rw-2. Available elements are:  - 
+#req.MessageLimit=100
+#print(pullpoint.PullMessages(req))
+
+"""
