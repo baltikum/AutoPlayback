@@ -2,7 +2,7 @@
 
 from pack import app
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import cv2, uuid, logging, traceback
 
 from pack.sys_variables import Sys_variables
@@ -10,8 +10,8 @@ from pack.db_models import User,Recordings,CameraConfigs
 from pack.presence import Presence
 from pack.load_cameras import Load_Cameras
 
-from concurrent.futures import ThreadPoolExecutor
-
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from queue import Queue
 
 #import os, re, time,traceback
 
@@ -23,7 +23,6 @@ from concurrent.futures import ThreadPoolExecutor
 configured_cameras = []
 capturing_cameras = []
 presence_active = False
-executor = ThreadPoolExecutor()
 
 
 video_playback_entrys = [{'id':0,'name':'Vardagsrum', 'time':'20220422','file':'filnamn.mp4'}]
@@ -31,118 +30,96 @@ archived_video_playback = [] #Should be written to database
 
   
 
-def start_cameras():
-    global configured_cameras,capturing_cameras
-    for entry in configured_cameras:
-        capture = cv2.VideoCapture(entry.url)
-        capturing_cameras.append(capture)
-        
-    return True       
-def record_camera(id):
-    global configured_cameras, capturing_cameras,presence_active,video_playback_entrys
-    camera = capturing_cameras[id]
 
-    start_time = False
-        
-    recording_uuid = uuid.uuid4()
-    fileName = f'{recording_uuid}_{configured_cameras[id].camera_name}.mp4'
-    
-    codec = cv2.VideoWriter_fourcc(*'mp4v')
-    fileout = cv2.VideoWriter(fileName, codec, 20.0, (1024,  768))
-  
-    res, frame = camera.read()
-    buffer = []
-    buffer_max_size = configured_cameras[id].fps * 3 # 3 seconds * 18fps max images 3*18*1280*720 /8   /1000  /1000 ~ 6.2 MB buffer per cam
-    
-    record = 0
-    recording_started_at = ''
-    
-    while(True):
-        
-        res, frame = camera.read()
-        buffer.append(frame)
-        
-        record += 1
-        
-        
-        if not res or record > 200 or presence_active:
-            break
-        else:      
-            #Requires camera_motion to be stable 
-            #from motion til x seconds after motion
-            if configured_cameras[id].camera_motion :
-                
-                if not start_time:
-                    now = datetime.now()
-                    format = "%Y%m%d_%H%M%S"
-                    recording_started_at = now.strftime(format)
-                    start_time = True
-                    
-                fileout.write(buffer.pop(0)) #Write
-            else:
-                if not start_time:
-                    if len(buffer) >= buffer_max_size:
-                        buffer.pop(0) #Discard
-                else:
-                    #Add delay here, ex record some seconds after motion
-                    break
-        
+def start_recording(msg_queue,camera):
 
-        
-    #camera.release() Not needed anymore
-    now = datetime.now()
-    format = "%Y%m%d_%H%M%S"
-    recording_ended_at = now.strftime(format)
-    
-    fileout.release()
-    
-    #Add to playback
-    video_playback_entry = {
-        'video_uuid': recording_uuid,
-        'video_start_time': recording_started_at,
+	motion_at = datetime.now() - timedelta(hours = 1)
+
+	capture = cv2.VideoCapture(camera.url)
+	
+	buffer = []
+	buffer_max_size = camera.fps * 3
+	
+	#Buffer awaiting motion
+	while True:
+		_ , frame = capture.read()
+		buffer.append(frame)
+
+		if len(buffer) > buffer_max_size :
+			buffer.pop(0)
+
+		try:
+			temp = msg_queue.get_nowait()
+			if temp :
+				motion_at = temp
+		except:
+			motion_at = motion_at
+
+		if (datetime.now() - motion_at) < 5 :
+			break
+	
+	#Start new file
+	format = "%Y%m%d_%H%M%S"
+	recording_started_at = motion_at.strftime(format)
+	fileName = f'{recording_started_at}_{camera.camera_name}.mp4'
+	codec = cv2.VideoWriter_fourcc(*'mp4v')
+	#Edit for camera settings!!! when implemented
+	fileout = cv2.VideoWriter(fileName, codec, 20.0, (1024,  768))
+
+
+	#The recording, perhaps need extending when further motion is detected
+	while ( datetime.now() - motion_at < 10 ):
+		_ , frame = capture.read()
+		if len(buffer) > 0 :
+			fileout.write(buffer.pop(0)) 
+		else:
+			fileout.write(frame)
+
+		try:
+			temp = msg_queue.get_nowait()
+			if temp :
+				motion_at = temp
+		except:
+			motion_at = motion_at
+
+	fileout.release()
+
+	#Create recording entry
+	ended_at = datetime.now()
+	recording_ended_at = ended_at.strftime(format)
+	video_playback_entry = {
+		'video_start_time': recording_started_at,
         'video_end_time': recording_ended_at,
         'video_camera_id': id,
         'video_file': fileName
-        }
-    video_playback_entrys.append(video_playback_entry)
-    
-    #Call itself to reinitiate a buffer session and new file
-    if not presence_active:
-        read_captures(id)
-   
-   
+    }
+
+	return video_playback_entry
+
+	
+
 
 if __name__ == '__main__':
-      
-      SYSTEM_SETTINGS = Sys_variables()
-      system_cameras = Load_Cameras(SYSTEM_SETTINGS)
+	thread_pool = ThreadPoolExecutor()
 
-      if not SYSTEM_SETTINGS.cameras_configured :
-            try:
-                  for camera in system_cameras.loaded_cameras:
-                        camera.configure_camera()
+	SYSTEM_SETTINGS = Sys_variables()
+	system_cameras = Load_Cameras(SYSTEM_SETTINGS)
+	
+	if not SYSTEM_SETTINGS.cameras_configured :
+		try:
+			for camera in system_cameras.loaded_cameras:
+				camera.configure_camera()
+				
+			SYSTEM_SETTINGS.cameras_configured = True
+		except:
+			traceback.print_exc()
+	
 
-                  SYSTEM_SETTINGS.cameras_configured = True
-            except:
-                  traceback.print_exc()
+	
+	for index, camera in enumerate(system_cameras.loaded_cameras):
+		camera.msg.queue = Queue()
+		thread_pool.submit(start_recording, (camera.msg_queue, camera) )
 
-            
-
-
-            if start_cameras():
-                  logging.info('Camera configuration loaded.')
-                  #record_camera(0)
-            else:
-                  logging.error('Cameras could not be started.')
-                  
-            
-      else:
-            logging.error('Cameras could not be loaded from configuration file.')
-            
-            
-            
-            
-
-    
-    app.run(host='localhost',port=PORT,debug=True,threaded=True)
+          
+	app.run(host='localhost', port=SYSTEM_SETTINGS.FLASK_PORT, debug=True, threaded=True)
     

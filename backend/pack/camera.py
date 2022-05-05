@@ -25,6 +25,7 @@ class Camera():
         self.camera_management = ''
         self.url = "rtsp://onvif:onvif@192.168.0.90/onvif-media/media.amp"
         self.camera_motion = False
+		self.msg_queue = False
 
 
     #Initiate configuratin of device hardware

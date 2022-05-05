@@ -1,8 +1,9 @@
 
+from datetime import datetime
 from flask import render_template, request, Response
 from pack.camera import Camera
 from pack import app
-
+import traceback,logging
 
 
 
@@ -11,44 +12,18 @@ def motion_id(id):
     try: 
         camera_id = int(id)
         motion_activated(camera_id)
-        res = True
     except:
         trace = traceback.format_exc()
-        res = False
         print(trace)
+
 def motion_activated(id):
-    global configured_cameras
-    camera = configured_cameras.get(id)
-    camera.record()
-    camera.motion_activated_at(time.time())
+	global motion_queues
+	try:
+		motion_queues[id].put(datetime.now())
+	except:
+		logging.error('Could not queue motion to camera.')
+
     
-
-#IMG yield jpeg ström 
-
-#Live image stream jpeg backend
-def generate_frames(id):
-    global capturing_cameras
-    try:
-        id = int(id)
-    except:
-        id= 0
-        
-    while True:
-            
-        success,frame = capturing_cameras[id].read()
-        if not success:
-            break
-        else:
-            ret,buffer = cv2.imencode('.jpg',frame)
-            frame = buffer.tobytes()
-            #yield frame ?
-            yield(b'--frame\r\n'
-                    b'Content-Type: image/jpeg\r\n\r\n'
-                    + frame +b'\r\n')
-@app.route('/live/<id>')
-def get_stream(id):
-    return Response(generate_frames(id),mimetype='multipart/x-mixed-replace; boundary=frame')
-
 
 
 #Den nya inspelade mp4 streamern
