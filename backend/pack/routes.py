@@ -2,9 +2,9 @@
 from datetime import datetime
 from flask import render_template, request, Response
 from pack.camera import Camera
-from pack import app
+from pack import app,thread_pool
 import traceback,logging
-
+from queue import Queue
 
 
 @app.route('/motion/<id>')
@@ -76,12 +76,12 @@ def read_captures(id):
 @app.route('/motion/<id>', methods=['POST'])
 def motion_detected(id):
     print(f'Motion notification received from {id}')
-    global capturing_cameras
+    global capturing_cameras,motion_lists
     
     try:
         id = int(id)
         if id < len(capturing_cameras) and id >= 0:
-            res = read_captures(id)
+            res = motion_lists[id].append(datetime.now())
         else:
             raise Exception('id is not in range')
     except:
@@ -93,18 +93,18 @@ def motion_detected(id):
 #Connection to presence module
 @app.route('/presence/<active>', methods=['POST'])
 def presence_detected(active):
-    global presence_active,configured_cameras,archived_video_playback,video_playback_entrys
+    global presence_active,video_playback_entrys
     try:
         active = int(active)
     except:
         logging.critical('Presence detection failed.')
+    
     if active == 0: #Away
         presence_active = False
         archived_video_playback.append(video_playback_entrys)
         video_playback_entrys = []
         try:
-            for entry in configured_cameras:
-                res = read_captures(entry.id)
+
         except:
             logging.error('Camera failed to record')
             

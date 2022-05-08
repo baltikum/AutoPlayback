@@ -1,7 +1,7 @@
 import pickletools
 import subprocess
 from time import sleep
-import cec
+import cec,requests
 
 class Presence():
     def __init__(self,mac,period,device_id=0):
@@ -44,11 +44,18 @@ class Presence():
             p_status = p.wait()
             
             if output:
+
+
+                url = 'http://localhost:5000/presence/1'
+                load = {'presence': 'active'}
+                _res = requests.post(url, data = load)
+
                 print('Online')
                 cec.init()
                 self.device = cec.Device(0)
                 self.device.power_on()
                 cec.set_active_source()
+
                 self.period = 480
             else:
                 print('Offline')

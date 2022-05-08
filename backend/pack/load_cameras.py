@@ -1,7 +1,7 @@
 import json, logging
 from pack.camera import Camera
 
-class Loaded_Cameras():
+class Load_Cameras():
       def _init__(self, SYSTEM_SETTINGS):
                   try:
                         with open('camera_configurations.ini', 'r') as file:

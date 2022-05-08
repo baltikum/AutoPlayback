@@ -1,15 +1,15 @@
 import logging
 import traceback
 from onvif import ONVIFCamera
-from datetime import datetime
+from datetime import datetime,timedelta
+import cv2
+from queue import Queue
 
 PORT = '80'
 
 #Camera object for each camera.
 class Camera():
-    def __init__( self, camera_id, camera_address ,camera_name ,username, password, settings,
-                    system_host, system_gw, system_ntp ):
-
+    def __init__( self, camera_id, camera_address ,camera_name ,username, password, settings, system_host, system_gw, system_ntp ):
         self.status = False
         self.camera_id = camera_id
         self.camera_address = camera_address
@@ -25,7 +25,7 @@ class Camera():
         self.camera_management = ''
         self.url = "rtsp://onvif:onvif@192.168.0.90/onvif-media/media.amp"
         self.camera_motion = False
-		self.msg_queue = False
+        self.msg_queue = False
 
 
     #Initiate configuratin of device hardware
@@ -51,6 +51,7 @@ class Camera():
       logging.info('Removed management instance')
 
 
+    
     #Set hostname
     def set_hostname(self,hostname):
         try:
@@ -204,7 +205,72 @@ class Camera():
         except:
             traceback.print_exc()
 
+    def start_recording(msg_queue,camera):
 
+        motion_at = datetime.now() - timedelta(hours = 1)
+
+        capture = cv2.VideoCapture(camera.url)
+        
+        buffer = []
+        buffer_max_size = camera.fps * 3
+        
+        #Buffer awaiting motion
+        while True:
+            _ , frame = capture.read()
+            buffer.append(frame)
+
+            if len(buffer) > buffer_max_size :
+                buffer.pop(0)
+
+            try:
+                temp = msg_queue.get_nowait()
+                if temp :
+                    motion_at = temp
+            except:
+                motion_at = motion_at
+
+            if (datetime.now() - motion_at) < 5 :
+                break
+        
+        #Start new file
+        format = "%Y%m%d_%H%M%S"
+        recording_started_at = motion_at.strftime(format)
+        fileName = f'{recording_started_at}_{camera.camera_name}.mp4'
+        codec = cv2.VideoWriter_fourcc(*'mp4v')
+        #Edit for camera settings!!! when implemented
+        fileout = cv2.VideoWriter(fileName, codec, 20.0, (1024,  768))
+
+
+        #The recording, perhaps need extending when further motion is detected
+        while ( datetime.now() - motion_at < 10 ):
+            _ , frame = capture.read()
+            if len(buffer) > 0 :
+                fileout.write(buffer.pop(0)) 
+            else:
+                fileout.write(frame)
+
+            try:
+                temp = msg_queue.get_nowait()
+                if temp :
+                    motion_at = temp
+            except:
+                motion_at = motion_at
+
+        fileout.release()
+
+        #Create recording entry
+        ended_at = datetime.now()
+        recording_ended_at = ended_at.strftime(format)
+        video_playback_entry = {
+            'video_start_time': recording_started_at,
+            'video_end_time': recording_ended_at,
+            'video_camera_id': id,
+            'video_file': fileName
+        }
+
+        return video_playback_entry
+
+	
 
 
 
