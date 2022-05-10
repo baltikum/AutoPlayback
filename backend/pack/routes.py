@@ -109,7 +109,7 @@ def presence_detected(active):
             
     elif active == 1: #Home
         presence_active = True
-    return  
+    return True
 
 
 @app.route('/playback/fetch', methods=['GET'])
