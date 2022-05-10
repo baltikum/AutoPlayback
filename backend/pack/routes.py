@@ -2,7 +2,7 @@
 from datetime import datetime
 from flask import render_template, request, Response
 from pack.camera import Camera
-from pack import app,thread_pool
+from pack import app
 import traceback,logging
 from queue import Queue
 
@@ -101,10 +101,9 @@ def presence_detected(active):
     
     if active == 0: #Away
         presence_active = False
-        archived_video_playback.append(video_playback_entrys)
         video_playback_entrys = []
         try:
-
+            print('START RECODINGS')
         except:
             logging.error('Camera failed to record')
             

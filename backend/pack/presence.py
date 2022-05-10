@@ -1,7 +1,7 @@
 import pickletools
 import subprocess
 from time import sleep
-import cec,requests
+import cec,requests,traceback
 
 class Presence():
     def __init__(self,mac,period,device_id=0):
@@ -10,27 +10,31 @@ class Presence():
         self.device_id = device_id
         self.device = False
         self.full_command
-        
-        MAC = '72:85:fd:64:a4:87' 
         self.mac = []
-        self.mac.append(MAC)
+        self.mac.append(mac)
         period = 10
       
       
       
     def configure_presence(self):
-        full_command = f"arp-scan -l | grep " 
-        length = len(self.mac)-1
-        i = 0
-        for entry in self.mac:
-            add_arg = f"{entry}"
-            i += 1
-            if i == length:
-                break
-            add_pipe = "\|"
-            
-        self.full_command = full_command
-        return True
+        try:
+            full_command = f"arp-scan -l | grep " 
+            length = len(self.mac)-1
+            i = 0
+            for entry in self.mac:
+                add_arg = f"{entry}"
+                i += 1
+                if i == length:
+                    break
+                add_pipe = "\|"
+                
+            self.full_command = full_command
+            res = True
+        except:
+            res = False
+            traceback.print_exc()
+
+        return res
 
     def run_presence(self):
             
@@ -44,7 +48,6 @@ class Presence():
             p_status = p.wait()
             
             if output:
-
 
                 url = 'http://localhost:5000/presence/1'
                 load = {'presence': 'active'}

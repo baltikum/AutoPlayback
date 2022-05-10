@@ -70,24 +70,26 @@ def camera_controller(system_cameras,motion_lists):
 
 
 if __name__ == '__main__':
-
     thread_pool = ThreadPoolExecutor()
-
-	SYSTEM_SETTINGS = Sys_variables()
-	system_cameras = Load_Cameras(SYSTEM_SETTINGS)
+    
+    SYSTEM_SETTINGS = Sys_variables()
+    system_cameras = Load_Cameras(SYSTEM_SETTINGS)
+    
+    if not SYSTEM_SETTINGS.cameras_configured :
+        try:
+            for camera in system_cameras.loaded_cameras:
+                camera.configure_camera()
+                
+            SYSTEM_SETTINGS.cameras_configured = True
+        except:
+            traceback.print_exc()
 	
-	if not SYSTEM_SETTINGS.cameras_configured :
-		try:
-			for camera in system_cameras.loaded_cameras:
-				camera.configure_camera()
-				
-			SYSTEM_SETTINGS.cameras_configured = True
-		except:
-			traceback.print_exc()
-	
-
-
-    thread_pool.submit(presence_controller, system_cameras )
-          
-	app.run(host='localhost', port=SYSTEM_SETTINGS.FLASK_PORT, debug=True, threaded=True)
+    pre = Presence('72:85:fd:64:a4:87',10)
+    res, trace = pre.configure_presence()
+    if res:
+        thread_pool.submit(pre.run_presence)
+    else:
+        print (trace)
+    
+    app.run(host='localhost', port=SYSTEM_SETTINGS.FLASK_PORT, debug=True, threaded=True)
     

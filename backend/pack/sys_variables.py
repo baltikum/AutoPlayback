@@ -2,9 +2,10 @@ import json
 
 class Sys_variables():
       def __init__(self):
-            with open('system_settings.ini', 'r' ) as file:
+            with open('./backend/pack/system_settings.ini', 'r' ) as file:
                   jsonData = file.read()
             sys_config = json.loads(jsonData)
+            sys_config = sys_config.get('system_config')
 
             self.SYSTEM_HOST = sys_config.get('system_ip')
             self.FLASK_PORT = sys_config.get('flask_port')
