@@ -20,7 +20,7 @@ class Presence():
         trace = ''
         command = []
         try:
-            command.append("sudo arp-scan -l -r 4 | grep ")
+            command.append("sudo arp-scan -l -r 5 | grep ")
             
             for index, entry in enumerate(self.mac):
                 command.append(f"'{entry}'")
@@ -60,8 +60,8 @@ class Presence():
                         _res = requests.post(url, data = load)
 
                     print(f'Status:[Online] for {output}')
-                    cec.init()
-                    self.device = cec.Device(0)
+                    #cec.init()
+                    #self.device = cec.Device(0)
                     #self.device.power_on()
                     #cec.set_active_source()
 
@@ -75,7 +75,7 @@ class Presence():
                             url = 'http://localhost:5000/presence/0'
                             load = {'presence': 'inactive'}
                             _res = requests.post(url, data = load)
-                            cec.init()
+                            #cec.init()
                             #self.device = cec.Device(0)
                             #self.device.standby()
                             self.period = 3
