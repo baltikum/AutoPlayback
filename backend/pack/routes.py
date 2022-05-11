@@ -3,7 +3,7 @@ from datetime import datetime
 from flask import render_template, request, Response
 from pack.camera import Camera
 from pack import app
-import traceback,logging
+import traceback,logging,json
 from queue import Queue
 
 
@@ -96,20 +96,25 @@ def presence_detected(active):
     global presence_active,video_playback_entrys
     try:
         active = int(active)
+        status = request.form.get('presence')
     except:
         logging.critical('Presence detection failed.')
+        
     
-    if active == 0: #Away
-        presence_active = False
-        video_playback_entrys = []
+
+    if active == 0 and status =='inactive': #Away
+        #presence_active = False
+        #video_playback_entrys = []
         try:
-            print('START RECODINGS')
+            print('START RECORDINGS')
         except:
             logging.error('Camera failed to record')
             
-    elif active == 1: #Home
-        presence_active = True
-    return True
+    elif active == 1 and status =='active': #Home
+        print('STOP RECORDINGS')
+        
+        #presence_active = True
+    return "{presence: 'active'}"
 
 
 @app.route('/playback/fetch', methods=['GET'])

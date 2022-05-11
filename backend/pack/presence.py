@@ -1,4 +1,5 @@
 #import pickletools
+import errno
 import subprocess
 from time import sleep
 import cec,requests,traceback
@@ -40,6 +41,8 @@ class Presence():
         #self.device = cec.Device(0)
         sleep(2)
         
+        previous = False
+        message = True
         count = 0
         while True:
             try:
@@ -47,17 +50,18 @@ class Presence():
                 
                 output, err = p.communicate()
                 p_status = p.wait()
+                
                 if output:
                     
                     count = 0
+                    if previous != output:
+                        url = 'http://localhost:5000/presence/1'
+                        load = {'presence': 'active'}
+                        _res = requests.post(url, data = load)
 
-                    url = 'http://localhost:5000/presence/1'
-                    load = {'presence': 'active'}
-                    #_res = requests.post(url, data = load)
-
-                    print('Online')
-                    #cec.init()
-                    #self.device = cec.Device(0)
+                    print(f'Status:[Online] for {output}')
+                    cec.init()
+                    self.device = cec.Device(0)
                     #self.device.power_on()
                     #cec.set_active_source()
 
@@ -66,12 +70,17 @@ class Presence():
                     count += 1
                     if count > 2:
                         count = 0
-                        print('Offline')
-                        #cec.init()
-                        #self.device = cec.Device(0)
-                        #self.device.standby()
-                        self.period = 3
-                    
+                        if previous != output:
+                            print('Status:[Offline]')
+                            url = 'http://localhost:5000/presence/0'
+                            load = {'presence': 'inactive'}
+                            _res = requests.post(url, data = load)
+                            cec.init()
+                            #self.device = cec.Device(0)
+                            #self.device.standby()
+                            self.period = 3
+                        
+                previous = output 
                 sleep(self.period) #self.period
             except:
                 traceback.print_exc()
