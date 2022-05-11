@@ -35,7 +35,7 @@ def camera_controller(system_cameras,motion_lists):
     global thread_pool,presence_active
 
     camera_queues = []
-
+    print('CAMERA CONTROLLER')
 
     def add_recorders_to_pool():
         for camera in system_cameras.loaded_cameras:
@@ -77,6 +77,7 @@ def on_off():
 
     while True:
         if presence_active and (presence_active is not previous):
+
             thread_pool.submit(camera_controller,(system_cameras,motion_lists))
         
         previous = presence_active

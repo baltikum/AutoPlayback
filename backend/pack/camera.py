@@ -42,7 +42,7 @@ class Camera():
       self.NTPServer = self.set_ntp_server(self.system_ntp)
       self.allowedIP = []
       self.configure_ip_filtering(self.system_host)
-            
+
       #self.create_streaming_profile()
       #self.url = self.get_streaming_url()
 
@@ -51,7 +51,7 @@ class Camera():
       logging.info('Removed management instance')
 
 
-    
+
     #Set hostname
     def set_hostname(self,hostname):
         try:
@@ -100,7 +100,7 @@ class Camera():
             return str(self.NTPServer)
         except:
             logging.info('Failed to set NTP server')
-            return "{'Exception': Failed to set NTP Server}" 
+            return "{'Exception': Failed to set NTP Server}"
 
     #Set devicedate and time
     def set_device_date_and_time(self):
@@ -136,15 +136,15 @@ class Camera():
             return f'{self.date_set}{self.time_set}'
         except:
             logging.info('Failed to set date and time on device')
-            return "{'Exception': Failed to set date and time on device }" 
+            return "{'Exception': Failed to set date and time on device }"
 
     #Configure IP Filtering list
     def configure_ip_filtering(self,host_address):
         try:
             setIPAddressFilter = self.camera_management.create_type('AddIPAddressFilter')
             setIPAddressFilter.IPAddressFilter = {
-                'Type':'Allow', 
-                'IPv4Address': 
+                'Type':'Allow',
+                'IPv4Address':
                     [
                         {
                             'Address': host_address,
@@ -155,7 +155,7 @@ class Camera():
                             'PrefixLength': 32
                         }
                     ]
-            }       
+            }
             self.camera_management.SetIPAddressFilter(setIPAddressFilter)
             temp = self.camera_management.GetIPAddressFilter().IPv4Address
             for entry in temp:
@@ -172,14 +172,14 @@ class Camera():
         uri = media_service.GetStreamUri(
             {
                 'StreamSetup':
-                    {   
+                    {
                         'Stream' : 'RTP-Unicast',
-                        'Transport' : { 'Protocol' : 'UDP' } 
-                    }, 
+                        'Transport' : { 'Protocol' : 'UDP' }
+                    },
                 'ProfileToken': media_service.GetProfiles()[0].token
             })
-        
-        
+
+
         return str(uri.Uri)
 
     def create_streaming_profile(self):
@@ -189,7 +189,7 @@ class Camera():
             profile = media_service.GetProfiles()[1]
 
             profmall = media_service.create_type('CreateProfile')
-            
+
             profmall.Name = 'autop_264'
             profmall.Token = 'autop_264'
             #print(profmall)
@@ -198,7 +198,7 @@ class Camera():
             #print(resp)
 
             #print(self.camera.create_events_service().GetEventProperties())
-            
+
 
 
             return ''
@@ -206,14 +206,15 @@ class Camera():
             traceback.print_exc()
 
     def start_recording(msg_queue,camera):
+        print(f'CAMERA RECORDING {camera.id}')
 
         motion_at = datetime.now() - timedelta(hours = 1)
 
         capture = cv2.VideoCapture(camera.url)
-        
+
         buffer = []
         buffer_max_size = camera.fps * 3
-        
+
         #Buffer awaiting motion
         while True:
             _ , frame = capture.read()
@@ -227,11 +228,14 @@ class Camera():
                 if temp :
                     motion_at = temp
             except:
+                logging.error('Motion queue exited with exception')
                 motion_at = motion_at
+
+            time.sleep(0.06)
 
             if (datetime.now() - motion_at) < 5 :
                 break
-        
+
         #Start new file
         format = "%Y%m%d_%H%M%S"
         recording_started_at = motion_at.strftime(format)
@@ -244,10 +248,13 @@ class Camera():
         #The recording, perhaps need extending when further motion is detected
         while ( datetime.now() - motion_at < 10 ):
             _ , frame = capture.read()
+            buffer.append(frame)
             if len(buffer) > 0 :
-                fileout.write(buffer.pop(0)) 
+                fileout.write(buffer.pop(0))
             else:
                 fileout.write(frame)
+
+            time.sleep(0.06)
 
             try:
                 temp = msg_queue.get_nowait()
@@ -269,13 +276,6 @@ class Camera():
         }
 
         return video_playback_entry
-
-	
-
-
-
-
-
 
 
 
@@ -339,7 +339,7 @@ print(str(pullpointsubscription))
 
 req = response.
 
-#req = pullpoint.create_type('PullMessages') # Exception: No element 'PullMessages' in namespace http://docs.oasis-open.org/wsrf/rw-2. Available elements are:  - 
+#req = pullpoint.create_type('PullMessages') # Exception: No element 'PullMessages' in namespace http://docs.oasis-open.org/wsrf/rw-2. Available elements are:  -
 #req.MessageLimit=100
 #print(pullpoint.PullMessages(req))
 
