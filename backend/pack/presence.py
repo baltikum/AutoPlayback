@@ -12,22 +12,22 @@ class Presence():
         self.full_command = ''
         self.mac = []
         self.mac.append(mac)
-      
+
     def __repr__(self):
         return f'{self.mac}'
-      
+
     def configure_presence(self):
         trace = ''
         command = []
         try:
             command.append("sudo arp-scan -l -r 5 | grep ")
-            
+
             for index, entry in enumerate(self.mac):
                 command.append(f"'{entry}'")
                 if index == (len(self.mac)-1):
                     break
                 command.append("\|")
-                
+
             self.full_command = ''.join(command)
             res = True
         except:
@@ -36,28 +36,29 @@ class Presence():
         return res, trace
 
     def run_presence(self):
-            
+
         #cec.init()
         #self.device = cec.Device(0)
         sleep(2)
-        
+
         previous = False
         message = True
         count = 0
         while True:
             try:
                 p = subprocess.Popen(self.full_command, stdout=subprocess.PIPE, shell=True)
-                
+
                 output, err = p.communicate()
                 p_status = p.wait()
-                
+
                 if output:
-                    
+
                     count = 0
                     if previous != output:
+                        header = { "Content-Type" : "application/json" }
                         url = 'http://localhost:5000/presence/1'
                         load = {'presence': 'active'}
-                        _res = requests.post(url, data = load)
+                        _res = requests.post(url, headers=header, data = load)
 
                     print(f'Status:[Online] for {output}')
                     #cec.init()
@@ -79,8 +80,8 @@ class Presence():
                             #self.device = cec.Device(0)
                             #self.device.standby()
                             self.period = 3
-                        
-                previous = output 
+
+                previous = output
                 sleep(self.period) #self.period
             except:
                 traceback.print_exc()
