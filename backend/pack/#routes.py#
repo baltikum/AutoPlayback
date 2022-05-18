@@ -63,8 +63,9 @@ def playback():
        
     chunk, start, length, file_size = get_chunk(byte1, byte2)
     resp = Response(chunk, 206, mimetype='video/mp4',
-                      content_type='video/mp4', direct_passthrough=True)
-    resp.headers.add('Content-Range', 'bytes {0-{1}/{2}'.format(start, start + length - 1, file_size))
+                      content_type=mimetype='video/mp4',
+                      content_type'video/mp4', direct_passthrough=True)
+    resp.headers.add('Content-Range', 'bytes {0}-{1}/{2}'.format(start, start + length - 1, file_size))
     return resp
 
 
