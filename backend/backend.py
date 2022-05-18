@@ -25,86 +25,101 @@ capturing_cameras = []
 presence_active = False
 
 thread_pool = ThreadPoolExecutor()
-motion_lists = [[]]
 
 video_playback_entrys = [{'id':0,'name':'Vardagsrum', 'time':'20220422','file':'filnamn.mp4'}]
 archived_video_playback = [] #Should be written to database
 
-  
-def camera_controller(system_cameras,motion_lists):
-    global thread_pool,presence_active
 
-    camera_queues = []
-    print('CAMERA CONTROLLER')
-
-    def add_recorders_to_pool():
-        for camera in system_cameras.loaded_cameras:
-            motion_lists.append([])
-            camera.msg.queue = Queue()
-            camera_queues.append(camera.msg.queue)
-            thread_pool.submit(camera.start_recording, (camera.msg_queue, camera) )
+camera_queues = []
+controller_queue = Queue()
 
 
-    add_recorders_to_pool()
-    
+def message_controller(args):
+    #threadqueues
+    camera_queues = args[0]
+    in_queue = args[1]
+    #local list of received motion alarms
+    motion_list = []
+
+    #initiate a list per camera
+    for _ in queues:
+        motion_list.append([])
+
+    #message distributor loop
     while True:
+        try:
+            #Check for incoming messages
+            if in_queue.empty():
+                res = False
+            else:
+                res = in_queue.get_nowait()
 
-        #Away loop to distribute motion alarms
-        while not presence_active :
-            for index, list in enumerate(motion_lists):
-                for entry in list:
-                    if len(entry) > 0:
-                        try:
-                            camera_queues[index].put(entry.pop(0))
-                        except:
-                            traceback.print_exc()
 
-            time.sleep(1)
+            #Check content of received message
+            if res:
+                res_json = json.loads(res)
 
-        #Stop all ques and recordings
-        if presence_active:
-            for q in camera_queues:
-                try:
-                    q.put('_stop')
-                    q.task_done()
-                except:
-                    traceback.print_exc()
-            break
+                #Individual camera commands
+                if 'index' in res_json:
+                    index = int(res['index'])
+                    if 'motion' in res_json:
+                        motion_list[index].append(datetime.now())
+                    elif 'start_recording' in res_json:
+                        res = camera_queues[index].put('_start')
+                    elif 'stop_recording' in res_json:
+                        res = camera_queues[index].put('_stop')
 
-def on_off():
-    global presence_active,system_cameras,motion_lists
-    previous = False
+                #Presence commands
+                if 'presence' in res_json:
+                    status = res_json['presence']
+                    status = int(status)
+                    if status == 1 :
+                        for i, _ in enumerate(motion_list):
+                            res = camera_queues[i].put('_start')
+                    else:
+                        for i, _ in enumerate(motion_list):
+                            res = camera_queues[i].put('_stop')
 
-    while True:
-        if presence_active and (presence_active is not previous):
 
-            thread_pool.submit(camera_controller,(system_cameras,motion_lists))
-        
-        previous = presence_active
-        time.sleep(5)
-        print(f'Presence is {presence_active}')
+            #loop distributes motion alarms
+            for i, list in enumerate(motion_list):
+                if len(list) > 0:
+                    res = camera_queues[i].put(list.pop(0))
+
+        except:
+            traceback.print_exc()
+
 
 if __name__ == '__main__':
 
-    
+
     SYSTEM_SETTINGS = Sys_variables()
     system_cameras = Load_Cameras(SYSTEM_SETTINGS)
-    
+
     if not SYSTEM_SETTINGS.cameras_configured :
         try:
             for camera in system_cameras.loaded_cameras:
                 camera.configure_camera()
-                
+
             SYSTEM_SETTINGS.cameras_configured = True
         except:
             traceback.print_exc()
-	
+
+
+
+    #Presence controller thread
     pre = Presence('72:85:fd:64:a4:87',10)
     res, trace = pre.configure_presence()
+    thread_pool.submit(pre.run_presence)
 
-    thread_pool.submit(pre.run_presence)#pre.run_presence
-    thread_pool.submit(on_off)
-    
-    
+    #add camera recording threads
+    for camera in system_cameras.loaded_cameras:
+        camera.msg_queue = Queue()
+        camera_queues.append(camera.msg_queue)
+        thread_pool.submit(camera.start_recording, (camera.msg_queue, camera) )
+
+    #add message controller thread
+    thread_pool.submit(message_controller,(camera_queues,controller_queue))
+
+
     app.run(host='localhost', port=SYSTEM_SETTINGS.FLASK_PORT, debug=True, threaded=True)
-    

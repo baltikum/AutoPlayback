@@ -2,7 +2,7 @@ import logging
 import traceback
 from onvif import ONVIFCamera
 from datetime import datetime,timedelta
-import cv2
+import cv2, time
 from queue import Queue
 
 PORT = '80'
@@ -205,77 +205,123 @@ class Camera():
         except:
             traceback.print_exc()
 
-    def start_recording(msg_queue,camera):
+    def start_recording(in_queue,out_queue,camera):
+        away_mode = False
+        quit_thread = False
+        motion_at = datetime.now() - timedelta(minutes=10)
+        format = "%Y%m%d_%H%M%S"
+
         print(f'CAMERA RECORDING {camera.id}')
 
-        motion_at = datetime.now() - timedelta(hours = 1)
+        def query_msg_queue():
+            try:
+                if in_queue.empty():
+                    pass
+                else:
+                    res = msg_queue.get_nowait()
 
-        capture = cv2.VideoCapture(camera.url)
+                if res:
+                    res_json = json.loads(res)
+                    if 'motion' in res_json:
+                        motion_at = datetime.fromisoformat(res_json['motion'])
+                    elif 'presence' in res_json:
+                        status = int(res_json['presence'])
+                        if status is not 1:
+                            away_mode = True
+                        else:
+                            away_mode = False
+                    elif 'command' in res_json:
+                        status = res_json['command']
+                        if status == '_quit_thread':
+                            quit_thread = True
 
-        buffer = []
-        buffer_max_size = camera.fps * 3
+                res = True
+            except:
+                res = False
+                traceback.print_exc()
 
-        #Buffer awaiting motion
+            return res
+        def start_new_file(camera, motion_at):
+            try:
+                recording_started_at = motion_at.strftime(format)
+                fileName = f'{recording_started_at}_{camera.camera_name}.mp4'
+                codec = cv2.VideoWriter_fourcc(*'mp4v')
+                fileout = cv2.VideoWriter(fileName, codec, camera.fps, (1024,  768))
+                res = True
+            except:
+                traceback.print_exc()
+                res = False
+            return res,recording_started_at,fileName,fileout
+        def record_video():
+            capture = cv2.VideoCapture(camera.url)
+            buffer = []
+            buffer_max_size = camera.fps * 3
+
+            reference_time = datetime.now()
+
+            #Buffer awaiting motion
+            while True:
+                _ , frame = capture.read()
+                buffer.append(frame)
+
+                if len(buffer) > buffer_max_size :
+                    buffer.pop(0)
+
+                _ = query_msg_queue()
+
+                if (((datetime.now() - motion_at).total_seconds() < 5)
+                    or quit_thread ):
+                        break
+
+                time.sleep((1.0/float(camera.fps)))
+
+            res, rec_at, fileName, fileout = start_new_file(camera,motion_at)
+
+            #Record to file loop
+            while (datetime.now() - motion_at).total_seconds() < 15 :
+                _ , frame = capture.read()
+                buffer.append(frame)
+
+                if len(buffer) > 0 :
+                    fileout.write(buffer.pop(0))
+                else:
+                    fileout.write(frame)
+
+                _ = query_msg_queue()
+
+                time.sleep((1.0/float(camera.fps)))
+
+            fileout.release()
+
+            #Create recording entry
+            ended_at = datetime.now()
+            recording_ended_at = ended_at.strftime(format)
+            video_playback_entry = ('{'
+                + f'"video_start_time": "{rec_at}",'
+                + f'"video_end_time": "{recording_ended_at}",'
+                + f'"video_camera_id": "{camera.id}",'
+                + f'"video_file": "{fileName}"'
+                + '}')
+
+            return video_playback_entry
+
+        #Awaiting away mode
         while True:
-            _ , frame = capture.read()
-            buffer.append(frame)
 
-            if len(buffer) > buffer_max_size :
-                buffer.pop(0)
+            #Makes sure recording,queue and query is executed fully
+            while True:
+                _ = query_msg_queue()
+                if not away_mode:
+                    break
+                video_playback_entry = record_video()
+                out_queuee.put(video_playback_entry)
 
-            try:
-                temp = msg_queue.get_nowait()
-                if temp :
-                    motion_at = temp
-            except:
-                logging.error('Motion queue exited with exception')
-                motion_at = motion_at
+            if quit_thread:
+                exit(0)
 
-            time.sleep(0.06)
+            #Awaiting away mode delay
+            time.sleep(5)
 
-            if (datetime.now() - motion_at) < 5 :
-                break
-
-        #Start new file
-        format = "%Y%m%d_%H%M%S"
-        recording_started_at = motion_at.strftime(format)
-        fileName = f'{recording_started_at}_{camera.camera_name}.mp4'
-        codec = cv2.VideoWriter_fourcc(*'mp4v')
-        #Edit for camera settings!!! when implemented
-        fileout = cv2.VideoWriter(fileName, codec, 20.0, (1024,  768))
-
-
-        #The recording, perhaps need extending when further motion is detected
-        while ( datetime.now() - motion_at < 10 ):
-            _ , frame = capture.read()
-            buffer.append(frame)
-            if len(buffer) > 0 :
-                fileout.write(buffer.pop(0))
-            else:
-                fileout.write(frame)
-
-            time.sleep(0.06)
-
-            try:
-                temp = msg_queue.get_nowait()
-                if temp :
-                    motion_at = temp
-            except:
-                motion_at = motion_at
-
-        fileout.release()
-
-        #Create recording entry
-        ended_at = datetime.now()
-        recording_ended_at = ended_at.strftime(format)
-        video_playback_entry = {
-            'video_start_time': recording_started_at,
-            'video_end_time': recording_ended_at,
-            'video_camera_id': id,
-            'video_file': fileName
-        }
-
-        return video_playback_entry
 
 
 

@@ -7,23 +7,47 @@ import traceback,logging,json
 from queue import Queue
 
 
-@app.route('/motion/<id>')
-def motion_id(id):
-    try: 
-        camera_id = int(id)
-        motion_activated(camera_id)
+@app.route('/motion', methods=['POST'])
+def motion_id():
+    try:
+        data = request.json
+        motion_data = '{"index":"' + str(data['index']) + '"}'
+        print(motion_data)
+        res = controller_queue.put(motion_data)
     except:
-        trace = traceback.format_exc()
-        print(trace)
+        res = False
+        traceback.print_exc()
 
-def motion_activated(id):
-	global motion_queues
-	try:
-		motion_queues[id].put(datetime.now())
-	except:
-		logging.error('Could not queue motion to camera.')
+    return '{ "response" : "' + res + '" }'
+#Receiving from presence module
+@app.route('/presence', methods=['POST'])
+def presence_detected():
+    try:
+        res = request.json
+        status = str(res['presence'])
+    except:
+        logging.critical('Presence detection failed, incoming not recognized.')
 
-    
+
+    try:
+        if status =='active': #Home
+            presence_data = '{ "presence" : "1" }'
+            controller_queue.put(presence_data)
+            res = True
+        else : #Away
+            presence_data = '{ "presence" : "0" }'
+            controller_queue.put(presence_data)
+            res = False
+    except:
+        logging.error('Presence failed to queue message to threads')
+
+    return '{ "presence" : "' + str(res) + '" }'
+
+
+
+
+
+
 
 
 #Den nya inspelade mp4 streamern
@@ -35,7 +59,7 @@ def get_chunk(byte1=None, byte2=None):
     full_path = "/home/pi/AutoPlayback/backend/0.mp4"
     file_size = os.stat(full_path).st_size
     start = 0
-    
+
     if byte1 < file_size:
         start = byte1
     if byte2:
@@ -47,7 +71,6 @@ def get_chunk(byte1=None, byte2=None):
         file.seek(start)
         chunk = file.read(length)
     return chunk, start, length, file_size
-
 @app.route('/playback')
 def playback():
     range_header = request.headers.get('Range', None)
@@ -60,7 +83,7 @@ def playback():
             byte1 = int(groups[0])
         if groups[1]:
             byte2 = int(groups[1])
-       
+
     chunk, start, length, file_size = get_chunk(byte1, byte2)
     resp = Response(chunk, 206, mimetype='video/mp4',
                       content_type='video/mp4', direct_passthrough=True)
@@ -69,59 +92,12 @@ def playback():
 
 
 
-#Motion route and add to threadpool
-def read_captures(id):
-    executor.submit(record_camera(id)) 
-    return True
-@app.route('/motion/<id>', methods=['POST'])
-def motion_detected(id):
-    print(f'Motion notification received from {id}')
-    global capturing_cameras,motion_lists
-    
-    try:
-        id = int(id)
-        if id < len(capturing_cameras) and id >= 0:
-            res = motion_lists[id].append(datetime.now())
-        else:
-            raise Exception('id is not in range')
-    except:
-        traceback.print_exc()
-        res = False
-    return res
-    
-    
-#Connection to presence module
-@app.route('/presence/<active>', methods=['POST'])
-def presence_detected(active):
-    global presence_active,video_playback_entrys
-    try:
-        active = int(active)
-        status = request.form.get('presence')
-    except:
-        logging.critical('Presence detection failed.')
-        
-    
-
-    if active == 0 and status =='inactive': #Away
-        #presence_active = False
-        #video_playback_entrys = []
-        try:
-            print('START RECORDINGS')
-        except:
-            logging.error('Camera failed to record')
-            
-    elif active == 1 and status =='active': #Home
-        print('STOP RECORDINGS')
-        
-        #presence_active = True
-    return "{presence: 'active'}"
-
 
 @app.route('/playback/fetch', methods=['GET'])
 def serve_playback():
     global video_playback_entrys
     return json.dumps(video_playback_entrys)
-    
+
 
 
 
@@ -139,14 +115,14 @@ def create_new_user():
     password = request.json['password']
     email = request.json['email']
     device = request.json['device']
-    
+
     #create a user
     user = User(name,username,password,device)
-    
+
     #submit to database
     db.session.add(user)
     db.session.commit()
-    
+
     #returns data as json
     return format_userdata(user)
 #Format json for succesfull login requests
@@ -170,7 +146,7 @@ def login_request():
     username = request.json['username']
     password = request.json['password']
     user = User.query.filter_by(username=username)
-    
+
     if user:
         return format_userdata(user)
     else:
@@ -202,14 +178,14 @@ def add_new_camera():
     username = request.json['username']
     password = request.json['password']
     address = request.json['address']
-    
+
     #create a new camera
     camera = Camera(name,username,password,address)
-    
+
     #submit to database
     db.session.add(camera)
     db.session.commit()
-    
+
     return 'Camera added.'
 #delete camera by id
 @app.route('/cameras/<id>', methods= ['DELETE'])
@@ -223,21 +199,20 @@ def delete_camera(id):
 def update_camera(id):
     #Find camera
     camera = Camera.query.filter_by(id=id)
-    
+
     #request new camera data
     name = request.json['name']
     username = request.json['username']
     password = request.json['password']
     address = request.json['address']
-    
+
     #update data on camera
     camera.update(dict(name = name,
                        username = username,
                        password = password,
                        address = address,
                        added_at = datetime.utcnow()))
-    
+
     #commit to database
     db.session.commit()
     return f'Camera updated.'
-
