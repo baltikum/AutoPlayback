@@ -35,6 +35,10 @@ controller_queue = Queue()
 
 
 def message_controller(args):
+    print('MESSAGECONTROLLER STARTED')
+    print('MESSAGECONTROLLER STARTED')
+    print('MESSAGECONTROLLER STARTED')
+
     #threadqueues
     camera_queues = args[0]
     in_queue = args[1]
@@ -53,6 +57,10 @@ def message_controller(args):
                 res = False
             else:
                 res = in_queue.get_nowait()
+
+            print(res)
+            print(res)
+            print(res)
 
 
             #Check content of received message
@@ -108,9 +116,9 @@ if __name__ == '__main__':
 
 
     #Presence controller thread
-    pre = Presence('72:85:fd:64:a4:87',10)
-    res, trace = pre.configure_presence()
-    thread_pool.submit(pre.run_presence)
+    #pre = Presence('72:85:fd:64:a4:87',10)
+    #res, trace = pre.configure_presence()
+    #thread_pool.submit(pre.run_presence)
 
     #add camera recording threads
     for camera in system_cameras.loaded_cameras:

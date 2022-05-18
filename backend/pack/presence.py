@@ -2,7 +2,7 @@
 import errno
 import subprocess
 from time import sleep
-import cec,requests,traceback
+import cec,requests,traceback,logging
 
 class Presence():
     def __init__(self,mac,period,device_id=0):
@@ -55,33 +55,52 @@ class Presence():
 
                     count = 0
                     if previous != output:
+                        previous = output
+
                         header = { "Content-Type" : "application/json" }
-                        url = 'http://localhost:5000/presence/1'
-                        load = {'presence': 'active'}
+                        url = 'http://localhost:5000/presence'
+                        load = '{ "presence" : "active" }'
                         _res = requests.post(url, headers=header, data = load)
 
-                    print(f'Status:[Online] for {output}')
-                    #cec.init()
-                    #self.device = cec.Device(0)
-                    #self.device.power_on()
-                    #cec.set_active_source()
+                        print(f'Status:[Online] for {output}')
+                        try:
+                            cec.init()
+                            self.device = cec.Device(0)
+                            self.device.power_on()
+                            cec.set_active_source()
+                        except:
+                            logging.error('Connect a compatible hdmi device')
 
-                    self.period = 30
+
+
+                    #self.period = 30
                 else:
+
                     count += 1
                     if count > 2:
                         count = 0
+                        print('Status:[Offline]')
                         if previous != output:
-                            print('Status:[Offline]')
-                            url = 'http://localhost:5000/presence/0'
-                            load = {'presence': 'inactive'}
-                            _res = requests.post(url, data = load)
-                            #cec.init()
-                            #self.device = cec.Device(0)
-                            #self.device.standby()
-                            self.period = 3
+                            previous = output
+                            header = { "Content-Type" : "application/json" }
+                            url = 'http://localhost:5000/presence'
+                            load = '{ "presence" : "inactive" }'
+                            _res = requests.post(url, headers=header, data = load)
+                            try:
+                                cec.init()
+                                self.device = cec.Device(0)
+                                self.device.standby()
+                                self.period = 3
 
-                previous = output
+                            except:
+                                logging.error('Connect a compatible hdmi device')
+
                 sleep(self.period) #self.period
             except:
                 traceback.print_exc()
+
+if __name__ == '__main__' :
+    #Presence controller thread
+    pre = Presence('72:85:fd:64:a4:87', 1)
+    res, trace = pre.configure_presence()
+    pre.run_presence()

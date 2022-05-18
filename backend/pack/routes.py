@@ -3,6 +3,7 @@ from datetime import datetime
 from flask import render_template, request, Response
 from pack.camera import Camera
 from pack import app
+from backend import controller_queue
 import traceback,logging,json
 from queue import Queue
 
@@ -24,15 +25,18 @@ def motion_id():
 def presence_detected():
     try:
         res = request.json
+        print(res)
         status = str(res['presence'])
     except:
         logging.critical('Presence detection failed, incoming not recognized.')
 
-
     try:
         if status =='active': #Home
             presence_data = '{ "presence" : "1" }'
-            controller_queue.put(presence_data)
+            temp = controller_queue.put(presence_data)
+            print(temp)
+            print(temp)
+            print(temp)
             res = True
         else : #Away
             presence_data = '{ "presence" : "0" }'
