@@ -2,7 +2,7 @@ import logging
 import traceback
 from onvif import ONVIFCamera
 from datetime import datetime,timedelta
-import cv2, time
+import cv2, time, json
 from queue import Queue
 
 PORT = '80'
@@ -206,6 +206,7 @@ class Camera():
             traceback.print_exc()
 
     def start_recording(in_queue,out_queue,camera):
+        global away_mode
         away_mode = False
         quit_thread = False
         motion_at = datetime.now() - timedelta(minutes=10)
@@ -218,7 +219,7 @@ class Camera():
                 if in_queue.empty():
                     pass
                 else:
-                    res = msg_queue.get_nowait()
+                    res = in_queue.get_nowait()
 
                 if res:
                     res_json = json.loads(res)
@@ -257,7 +258,6 @@ class Camera():
             buffer = []
             buffer_max_size = camera.fps * 3
 
-            reference_time = datetime.now()
 
             #Buffer awaiting motion
             while True:
@@ -314,7 +314,7 @@ class Camera():
                 if not away_mode:
                     break
                 video_playback_entry = record_video()
-                out_queuee.put(video_playback_entry)
+                out_queue.put(video_playback_entry)
 
             if quit_thread:
                 exit(0)

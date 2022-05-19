@@ -3,49 +3,12 @@ from datetime import datetime
 from flask import render_template, request, Response
 from pack.camera import Camera
 from pack import app
-from backend import controller_queue
-import traceback,logging,json
+import traceback,logging,json,os
 from queue import Queue
 
 
-@app.route('/motion', methods=['POST'])
-def motion_id():
-    try:
-        data = request.json
-        motion_data = '{"index":"' + str(data['index']) + '"}'
-        print(motion_data)
-        res = controller_queue.put(motion_data)
-    except:
-        res = False
-        traceback.print_exc()
 
-    return '{ "response" : "' + res + '" }'
-#Receiving from presence module
-@app.route('/presence', methods=['POST'])
-def presence_detected():
-    try:
-        res = request.json
-        print(res)
-        status = str(res['presence'])
-    except:
-        logging.critical('Presence detection failed, incoming not recognized.')
 
-    try:
-        if status =='active': #Home
-            presence_data = '{ "presence" : "1" }'
-            temp = controller_queue.put(presence_data)
-            print(temp)
-            print(temp)
-            print(temp)
-            res = True
-        else : #Away
-            presence_data = '{ "presence" : "0" }'
-            controller_queue.put(presence_data)
-            res = False
-    except:
-        logging.error('Presence failed to queue message to threads')
-
-    return '{ "presence" : "' + str(res) + '" }'
 
 
 
