@@ -1,5 +1,6 @@
 import React from "react";
 
+import VideoPlayback from '../components/playback/VideoPlayback'
 import '../components/css/container.css'
 import '../components/css/video-holder.css'
 
@@ -8,9 +9,8 @@ return (
 	<div className="container">
 		<div className="video-holder">
 			<h1>Recorded</h1>
-            <video autoPlay muted>
-                  <source src='http://localhost:5000/playback' type="video/mp4" />
-            </video>
+
+            <VideoPlayback />
 		</div>
 	</div>
 );

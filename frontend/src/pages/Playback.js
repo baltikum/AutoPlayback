@@ -16,7 +16,7 @@ const Playback = () => {
 					  console.log(response.data);
 				},
 				(error) => {
-					  /*console.log(error);*/
+					  console.log(error);
 				}
 		  ); 
 	}
@@ -28,6 +28,7 @@ const Playback = () => {
 	return (
 		<div className="container">
 			<div className="video-holder">
+
 				<h1>Playback</h1>
 				<VideoPlayback playbacks={playbacks} />
 			</div>

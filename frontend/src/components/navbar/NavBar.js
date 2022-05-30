@@ -9,8 +9,8 @@ const NavBar = () => {
 			<NavLink to="/live">
 				<i className="bi-play-fill"></i> Live
 			</NavLink>
-			<NavLink to="/recorded">
-				<i className="bi-disc-fill"></i> Recorded
+			<NavLink to="/">
+				<i className="bi-disc-fill"></i> Playback
 			</NavLink>
 			<NavLink to="/settings">
 				<i className="bi-sliders"></i> Settings

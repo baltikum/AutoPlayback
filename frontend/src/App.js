@@ -13,7 +13,7 @@ import { BrowserRouter as Router, Routes, Route}
 
 import Playback from './pages/Playback';
 import Live from './pages/Live';
-import Recorded from './pages/Recorded';
+//import Recorded from './pages/Recorded';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 
@@ -39,7 +39,7 @@ function App() {
                   <Routes>
                         <Route exact path='/' element={<Playback />} />
                         <Route path='/live' element={<Live />} />
-                        <Route path='/recorded' element={<Recorded/>} />
+                        <Route path='/' element={<Playback />} />
                         <Route path='/settings' element={<Settings/>} />
                         <Route path='/login' element={<Login />} />
                   </Routes>
