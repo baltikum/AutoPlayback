@@ -33,7 +33,13 @@ def after_request(response):
     response.headers.add('Accept-Ranges', 'bytes')
     return response
 def get_chunk(byte1=None, byte2=None):
-    full_path = "~/Documents/AutoPlayback/backend/public/video/0.mp4"
+    temp = os.getcwd()
+    print(temp)
+
+    print(temp)
+
+    print(temp)
+    full_path = "../recordedvideo/0.mp4"
     file_size = os.stat(full_path).st_size
     start = 0
 

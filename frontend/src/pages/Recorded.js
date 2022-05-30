@@ -9,7 +9,7 @@ return (
 		<div className="video-holder">
 			<h1>Recorded</h1>
             <video autoPlay muted>
-                  <source src={'/playback'} type="video/mp4" />
+                  <source src='http://localhost:5000/playback' type="video/mp4" />
             </video>
 		</div>
 	</div>
