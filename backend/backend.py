@@ -1,5 +1,7 @@
 
 
+from cv2 import trace
+from numpy import full
 from pack import app
 
 from datetime import datetime, timedelta
@@ -12,7 +14,7 @@ from pack.load_cameras import Load_Cameras
 
 from flask import request
 
-import time, json,cv2,logging,sys
+import time, json,cv2,logging,sys,subprocess,shlex,os
 from queue import Queue
 
 
@@ -28,7 +30,7 @@ presence_active = False
 
 thread_pool = ThreadPoolExecutor()
 
-video_playback_entrys = [{'id':0,'name':'Vardagsrum', 'time':'20220422','file':'filnamn.mp4'}]
+
 archived_video_playback = [] #Should be written to database
 
 
@@ -37,7 +39,30 @@ camera_in_queues = []
 controller_queue = Queue()
 live_out_queue = Queue()
 
+
+def live_tmp_eraser():
+    while True:
+        try:
+            aged = time.time() - 10 
+            folder = '/var/tmp/video'
+            for file in os.listdir(folder):
+                print(file)
+                if file.endswith('.ts'):
+                    path = os.path.join(folder, file)
+                    stat = os.stat(path)
+                    mtime = stat.st_mtime
+                    if mtime < aged:
+                        os.remove(path)
+        except:
+            traceback.print_exc()
+
+        time.sleep(5)
+
+
+
+
 def live_camera_thread(args):
+    print('LIVE CAMERAAAAAA')
     def query_msg_queue(in_queue, away_mode, quit_thread):
         try:
             if in_queue.empty():
@@ -64,17 +89,30 @@ def live_camera_thread(args):
 
 
     in_queue = args[0]
-    system_cameras = args[1]
+    system_camera = args[1]
 
     away_mode = False
     quit_thread = False
 
+
+    command = (f"ffmpeg -i {system_camera.url}" +
+    " -fflags flush_packets -max_delay 5 -flags -global_header -hls_time 2 " + 
+    f"-hls_list_size 3 -vcodec copy -y /var/tmp/video/{system_camera.camera_id}.m3u8")
+    print(command)
+    args = shlex.split(command)
+    id = False
     while True:
         while True:
             _, away_mode, quit_thread = query_msg_queue(in_queue, away_mode,quit_thread)
-            if not away_mode:
+            print(id)
+            if away_mode:
                 break
+            
+            if not id:
+                print('START LIVE')
+                id = subprocess.Popen(args)
 
+            time.sleep(2)
         if quit_thread:
             exit(0)
         
@@ -323,6 +361,16 @@ def motion_id():
 
 if __name__ == '__main__':
 
+    #Create temporary live storage
+    try:
+        directory = "video"
+        parent_dir = "/var/tmp/"
+        path = os.path.join(parent_dir, directory)
+        os.mkdir(path)
+    except:
+        pass
+
+
 
     SYSTEM_SETTINGS = Sys_variables()
     system_cameras = Load_Cameras(SYSTEM_SETTINGS)
@@ -351,9 +399,12 @@ if __name__ == '__main__':
         camera_in_queues.append(camera_in_queue)
         thread_pool.submit(camera_recording_thread, [camera_out_queue,camera_in_queue, camera] )
 
-  
-    thread_pool.submit(live_camera_thread,[live_out_queue,system_cameras])
+    
+    for camera in system_cameras.loaded_cameras:
+        thread_pool.submit(live_camera_thread,[live_out_queue,camera])
 
+    #Used to clean temporary live data
+    thread_pool.submit(live_tmp_eraser)
 
     #add message controller thread
     thread_pool.submit(message_controller,[camera_out_queues,camera_in_queues,controller_queue])

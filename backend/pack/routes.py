@@ -32,14 +32,8 @@ def live(url):
 def after_request(response):
     response.headers.add('Accept-Ranges', 'bytes')
     return response
-def get_chunk(byte1=None, byte2=None):
-    temp = os.getcwd()
-    print(temp)
+def get_chunk(full_path, byte1=None, byte2=None):
 
-    print(temp)
-
-    print(temp)
-    full_path = "../recordedvideo/0.mp4"
     file_size = os.stat(full_path).st_size
     start = 0
 
@@ -54,8 +48,19 @@ def get_chunk(byte1=None, byte2=None):
         file.seek(start)
         chunk = file.read(length)
     return chunk, start, length, file_size
-@app.route('/playback')
-def playback():
+@app.route('/playback/<filename>')
+def playback(filename):
+    temp = os.getcwd()
+    print(temp)
+
+    print(temp)
+
+    print(temp)
+    try:
+        full_path = "../recordedvideo/" + str(filename)
+    except:
+        pass
+
     range_header = request.headers.get('Range', None)
     byte1, byte2 = 0, None
     if range_header:
@@ -67,7 +72,7 @@ def playback():
         if groups[1]:
             byte2 = int(groups[1])
 
-    chunk, start, length, file_size = get_chunk(byte1, byte2)
+    chunk, start, length, file_size = get_chunk(full_path, byte1, byte2)
     resp = Response(chunk, 206, mimetype='video/mp4',
                       content_type='video/mp4', direct_passthrough=True)
     resp.headers.add('Content-Range', 'bytes {0}-{1}/{2}'.format(start, start + length - 1, file_size))
