@@ -1,12 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
+//import axios from 'axios'
+//import React, { useState, useEffect } from 'react';
+
+import React from 'react';
 import './App.css';
 
 import NavBar from './components/navbar/NavBar';
 import { BrowserRouter as Router, Routes, Route}
 	from 'react-router-dom';
 
-import axios from 'axios'
 
 import Playback from './pages/Playback';
 import Live from './pages/Live';

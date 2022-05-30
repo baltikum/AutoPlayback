@@ -2,15 +2,25 @@
 from datetime import datetime
 from flask import render_template, request, Response
 from pack.camera import Camera
-from pack import app
-import traceback,logging,json,os
+from pack import app, video_playback_entrys
+import traceback,logging,json,os,re
 from queue import Queue
 
 
 
 
 
+@app.route('/live/<url>', methods=['GET'])
+def live(url):
+    directory_path = os.getcwd()
+    print("My current directory is : " + directory_path)
+    filename = ('./public/video/' + url)
+    with open(filename,'r') as file:
+        temp = file.read()
 
+    #resp = make_response(temp)
+    #resp.headers['Access-Control-Allow-Origin'] = '*'
+    return Response(temp,headers={ 'Access-Control-Allow-Origin': '*' })
 
 
 
@@ -23,7 +33,7 @@ def after_request(response):
     response.headers.add('Accept-Ranges', 'bytes')
     return response
 def get_chunk(byte1=None, byte2=None):
-    full_path = "/home/pi/AutoPlayback/backend/0.mp4"
+    full_path = "~/Documents/AutoPlayback/backend/public/video/0.mp4"
     file_size = os.stat(full_path).st_size
     start = 0
 

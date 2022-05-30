@@ -1,11 +1,12 @@
 import React from 'react'
+import ReactPlayer from 'react-player'
+
+//'http://localhost:666/liveStream.m3u8'
 
 export default function VideoPlayback(playback) {
   return (
       <>
-            <video autoPlay muted>
-                  <source src={'/video/' + playback.id} type="video/mp4" />
-            </video>
+            <ReactPlayer url={playback} playing={true}  controls={true} muted />
       </>
 
   )

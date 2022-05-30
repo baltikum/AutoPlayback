@@ -1,6 +1,5 @@
 
 
-from cv2 import trace
 from pack import app
 
 from datetime import datetime, timedelta
@@ -36,15 +35,59 @@ archived_video_playback = [] #Should be written to database
 camera_out_queues = []
 camera_in_queues = []
 controller_queue = Queue()
+live_out_queue = Queue()
+
+def live_camera_thread(args):
+    def query_msg_queue(in_queue, away_mode, quit_thread):
+        try:
+            if in_queue.empty():
+                res = False
+            else:
+                res = in_queue.get_nowait()
+                
+            if res:
+                res_json = json.loads(res)
+                if 'command' in res_json:
+                    command = res_json['command']
+                    if command == '_quit_thread':
+                        quit_thread = True
+                    elif command == '_set_away':
+                        away_mode = True
+                    elif command == '_set_home':
+                        away_mode = False
+            res = True
+        except:
+            res = False
+            traceback.print_exc()
+
+        return res, away_mode, quit_thread
 
 
+    in_queue = args[0]
+    system_cameras = args[1]
 
-def start_recording(args):
+    away_mode = False
+    quit_thread = False
+
+    while True:
+        while True:
+            _, away_mode, quit_thread = query_msg_queue(in_queue, away_mode,quit_thread)
+            if not away_mode:
+                break
+
+        if quit_thread:
+            exit(0)
+        
+        #Awaiting away mode delay
+        time.sleep(5)
+
+#Each camera runs in one of these threads
+def camera_recording_thread(args):
 
     in_queue = args[0]
     out_queue = args[1]
     camera = args[2]
-    
+
     try:
         away_mode = False
         quit_thread = False
@@ -162,19 +205,21 @@ def start_recording(args):
         #Makes sure recording,queue and query is executed fully
         while True:
             _, away_mode, motion_at, quit_thread = query_msg_queue(in_queue, away_mode, motion_at, quit_thread)
+
+            if quit_thread:
+                exit(0)
+
             if not away_mode:
                 break
+
             video_playback_entry = record_video(in_queue, away_mode, motion_at, quit_thread)
             out_queue.put(video_playback_entry)
 
-        if quit_thread:
-            exit(0)
+
         #Awaiting away mode delay
         time.sleep(5)
 
-
-
-
+#Distributes system messages
 def message_controller(args):
     #threadqueues
     camera_out_queues = args[0]
@@ -263,7 +308,7 @@ def presence_detected():
         logging.error('Presence failed to queue message to threads')
 
     return '{ "presence" : "' + str(res) + '" }'
-
+#Incoming motion alarms
 @app.route('/motion', methods=['POST'])
 def motion_id():
     try:
@@ -304,13 +349,15 @@ if __name__ == '__main__':
         camera_in_queue = Queue()
         camera_out_queues.append(camera_out_queue)
         camera_in_queues.append(camera_in_queue)
-        thread_pool.submit(start_recording, [camera_out_queue,camera_in_queue, camera] )
+        thread_pool.submit(camera_recording_thread, [camera_out_queue,camera_in_queue, camera] )
 
   
+    thread_pool.submit(live_camera_thread,[live_out_queue,system_cameras])
+
+
     #add message controller thread
     thread_pool.submit(message_controller,[camera_out_queues,camera_in_queues,controller_queue])
 
-    
     presence_data = '{ "presence" : "0" }'
     controller_queue.put(presence_data)
 
