@@ -2,7 +2,7 @@
 
 from cv2 import trace
 from numpy import full
-from pack import app
+from pack import app,configured_cameras
 
 from datetime import datetime, timedelta
 import traceback
@@ -23,10 +23,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 
 
-
-configured_cameras = []
-capturing_cameras = []
-presence_active = False
+#capturing_cameras = []
+#presence_active = False
 
 thread_pool = ThreadPoolExecutor()
 
@@ -46,7 +44,6 @@ def live_tmp_eraser():
             aged = time.time() - 10 
             folder = '/var/tmp/video'
             for file in os.listdir(folder):
-                print(file)
                 if file.endswith('.ts'):
                     path = os.path.join(folder, file)
                     stat = os.stat(path)
@@ -62,7 +59,6 @@ def live_tmp_eraser():
 
 
 def live_camera_thread(args):
-    print('LIVE CAMERAAAAAA')
     def query_msg_queue(in_queue, away_mode, quit_thread):
         try:
             if in_queue.empty():
@@ -104,13 +100,11 @@ def live_camera_thread(args):
     while True:
         while True:
             _, away_mode, quit_thread = query_msg_queue(in_queue, away_mode,quit_thread)
-            print(id)
             if away_mode:
                 break
             
             if not id:
-                print('START LIVE')
-                id = subprocess.Popen(args)
+                id = subprocess.Popen(args,shell=True)
 
             time.sleep(2)
         if quit_thread:
@@ -393,6 +387,7 @@ if __name__ == '__main__':
 
     #add camera recording threads
     for camera in system_cameras.loaded_cameras:
+        configured_cameras.append(camera)
         camera_out_queue = Queue()
         camera_in_queue = Queue()
         camera_out_queues.append(camera_out_queue)

@@ -23,4 +23,6 @@ db = SQLAlchemy(app)
 video_playback_entrys = [{'id':0,'name':'Vardagsrum', 'time':'20220422','file':'filnamn.mp4'}]
 
 
+configured_cameras = []
+
 from pack import routes

@@ -2,13 +2,13 @@
 from datetime import datetime
 from flask import render_template, request, Response
 from pack.camera import Camera
-from pack import app, video_playback_entrys
+from pack import app, video_playback_entrys,configured_cameras
 import traceback,logging,json,os,re
 from queue import Queue
 
 
 
-
+"""
 
 @app.route('/live/<url>', methods=['GET'])
 def live(url):
@@ -22,7 +22,7 @@ def live(url):
     #resp.headers['Access-Control-Allow-Origin'] = '*'
     return Response(temp,headers={ 'Access-Control-Allow-Origin': '*' })
 
-
+"""
 
 
 
@@ -50,12 +50,6 @@ def get_chunk(full_path, byte1=None, byte2=None):
     return chunk, start, length, file_size
 @app.route('/playback/<filename>')
 def playback(filename):
-    temp = os.getcwd()
-    print(temp)
-
-    print(temp)
-
-    print(temp)
     try:
         full_path = "../recordedvideo/" + str(filename)
     except:
@@ -88,7 +82,9 @@ def serve_playback():
 
 
 
-
+@app.route('/live/sources', methods=['GET'])
+def serve_livesources():
+    return json.dumps(configured_cameras)
 
 
 
