@@ -3,7 +3,7 @@ from datetime import datetime
 from flask import render_template, request, Response
 from pack.camera import Camera
 from pack import app, video_playback_entrys,configured_cameras,db
-from db_models import User,CameraConfigs,Recordings
+from pack.db_models import SystemUsers,CameraConfigs,Recordings
 import traceback,logging,json,os,re
 from queue import Queue
 
@@ -102,7 +102,7 @@ def create_new_user():
     device = request.json['device']
 
     #create a user
-    user = User(name,username,password,email,0,device)
+    user = SystemUsers(name,username,password,email,0,device)
 
     #submit to database
     db.session.add(user)
@@ -131,7 +131,7 @@ def format_userdata(user):
 def login_request():
     username = request.json['username']
     password = request.json['password']
-    user = User.query.filter_by(username=username)
+    user = SystemUsers.query.filter_by(username=username)
 
     if user:
         return format_userdata(user)
