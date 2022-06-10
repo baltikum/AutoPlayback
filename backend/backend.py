@@ -13,7 +13,7 @@ from pack.load_cameras import Load_Cameras
 
 from flask import request
 
-import time, json,logging,sys,subprocess,shlex,os
+import time, json,logging,sys,subprocess,shlex,os,cv2
 from queue import Queue
 
 
@@ -103,7 +103,7 @@ def live_camera_thread(args):
                 break
             
             if not id:
-                id = subprocess.Popen(args,shell=True)
+                id = subprocess.Popen(args)
 
             time.sleep(2)
         if quit_thread:
@@ -406,4 +406,4 @@ if __name__ == '__main__':
     presence_data = '{ "presence" : "0" }'
     controller_queue.put(presence_data)
 
-    app.run(host='localhost', port=SYSTEM_SETTINGS.FLASK_PORT, debug=True, threaded=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=SYSTEM_SETTINGS.FLASK_PORT, debug=True, threaded=True, use_reloader=False)

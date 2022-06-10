@@ -23,7 +23,13 @@ class Camera():
         self.system_ntp = system_ntp
         self.camera = ''
         self.camera_management = ''
-        self.url = "rtsp://onvif:onvif@192.168.0.90/onvif-media/media.amp"
+        
+      
+        if int(camera_id ) == 0:
+            self.url = "rtsp://onvif:onvif@192.168.0.90/onvif-media/media.amp"
+        else:
+            self.url = "rtsp://onvif:Examen2022@192.168.0.91/h264_stream"
+            
         self.camera_motion = False
         self.msg_queue = False
 
