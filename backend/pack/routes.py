@@ -2,7 +2,8 @@
 from datetime import datetime
 from flask import render_template, request, Response
 from pack.camera import Camera
-from pack import app, video_playback_entrys,configured_cameras
+from pack import app, video_playback_entrys,configured_cameras,db
+from db_models import User,CameraConfigs,Recordings
 import traceback,logging,json,os,re
 from queue import Queue
 
@@ -101,7 +102,7 @@ def create_new_user():
     device = request.json['device']
 
     #create a user
-    user = User(name,username,password,device)
+    user = User(name,username,password,email,0,device)
 
     #submit to database
     db.session.add(user)
@@ -143,27 +144,22 @@ def login_request():
 #get full list of camera configurations as json
 @app.route('/get_cameras', methods = ['GET'])
 def get_cameras():
-
-    #cameras = Camera.query.order_by(Camera.id.asc()).all()
+    cameras = Camera.query.order_by(Camera.id.asc()).all()
     cameras_json = []
-    #for camera in cameras:
-        #cameras_json.append(format_camera(camera))
-        
-    camera = { 'id': 0, 'name': "Backen", 'username':"onvif",'address':"192.168.0.90",'setting':1}
-    cameras_json.append(camera)
-    camera = { 'id': 1, 'name': "Köket", 'username':"onvif",'address':"192.168.0.91",'setting':2}
-    cameras_json.append(camera)
+    for camera in cameras:
+        cameras_json.append(format_camera(camera))
     return {'cameras': cameras_json }
-    
+
 #Format camera configurations to json
 def format_camera(camera):
     return {
-        "camera_id": camera.id,
-        "camera_name": camera.name,
-        "camera_username": camera.username,
-        "camera_address": camera.address,
-        "camera_setting": camera.setting,
-        "camera_added_at": camera.added_at
+        "id": camera.id,
+        "name": camera.name,
+        "username": camera.username,
+        "resolution": camera.resolution,
+        "fps": camera.fps,
+        "address": camera.address,
+        "added_at": camera.added_at
     }
 
 
