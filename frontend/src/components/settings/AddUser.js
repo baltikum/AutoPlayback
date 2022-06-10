@@ -38,6 +38,14 @@ function AddUser ({postNewUser, setChoice})  {
             <input className="form-control input-add" type="password" name="user_password" placeholder="Password" required />
         </div>
 
+        <div className="input-group input-group-lg">
+            <select className="form-control" name="setting-choiceuser_privilege">
+                <option value="0">Administrator</option>
+                <option value="1">Live and Playback</option>
+                <option value="2">Live</option>
+            </select>
+        </div>
+
 
         <br />
 

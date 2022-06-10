@@ -44,23 +44,40 @@ function Login ({setLoggedIn, setLoggedInUser, loginStatus }) {
           event.preventDefault();
         
           var { uname, pass } = document.forms[0];
-          console.log(uname.value)
-          console.log(pass)
+          pass = bcrypt.hashSync(pass.value, 'autoplayback_salt')
+  
+          axios.post('/login', {'username': uname.value, 'password': pass } ).then(
+              (response) => {
+                localStorage.setItem('username', userData.username )
+                localStorage.setItem('privilege', userData.privilege )
+                localStorage.setItem('user', userData )    
+                handleLogin(true)
+                handleLoggedInUser(userData)
+                setLoggedInState(true)     
+
+                console.log(response);
+
+              },
+              (error) => {
+                    console.log(error);
+              }
+          );
+
 
           const userData = database.find((user) => user.username === uname.value);
         
           if (userData) {
-            if (userData.password === pass.value) {
+            if (userData.password === pass) {
 
-              localStorage.setItem('username', userData.username )
-              localStorage.setItem('privilege', userData.privilege )
-              localStorage.setItem('user', userData )
+              //localStorage.setItem('username', userData.username )
+              //localStorage.setItem('privilege', userData.privilege )
+              //localStorage.setItem('user', userData )
 
-              handleLogin(true)
-              handleLoggedInUser(userData)
+              //handleLogin(true)
+              //handleLoggedInUser(userData)
 
-              setLoggedInState(true)
-              console.log(userData)
+              //setLoggedInState(true)
+              //console.log(userData)
             };
           };
 
