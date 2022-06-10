@@ -128,8 +128,8 @@ def format_userdata(user):
 def query_user():
     username = request.json['username']
     user = SystemUsers.query.filter_by(username=username)
-
-    if user:
+    
+    if user.username == username:
         return { 'status':True, 'salt':user.salt }
     else:
         return { 'status':False } 
@@ -139,8 +139,6 @@ def query_user():
 def login_request():
     username = request.json['username']
     password = request.json['password']
-
-    print( f'{username}{password}')
 
     user = SystemUsers.query.filter_by(username=username)
 

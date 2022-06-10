@@ -51,7 +51,7 @@ const SettingsChoices = () => {
 
         event.preventDefault();
         var { user_name, user_username, user_password, user_email,user_device } = document.forms[0];
-        const salt = bcrypt.genSaltSync(10)
+        const salt = bcrypt.genSaltSync(6)
         user_password = bcrypt.hashSync(user_password.value, salt)
         
         axios.post('/add_user', {'name': user_name.value,'username':user_username.value,'password':user_password,'email':user_email.value,'device':user_device.value, 'salt':salt} ).then(
