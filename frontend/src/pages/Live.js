@@ -20,6 +20,10 @@ const Live = () => {
     }
 
     const fetchLiveSources = async () => {
+
+
+
+
         axios.get('/live/sources').then(
               (response) => {
                     setAllSources(response.data)
@@ -28,7 +32,11 @@ const Live = () => {
                     console.log(error);
               }
         ); 
+
+        
     }
+
+
 
 	useEffect(() => {
         fetchLiveSources()

@@ -1,7 +1,6 @@
 
+import urllib.parse as urlparse
 
-from cv2 import trace
-from numpy import full
 from pack import app,configured_cameras
 
 from datetime import datetime, timedelta
@@ -14,7 +13,7 @@ from pack.load_cameras import Load_Cameras
 
 from flask import request
 
-import time, json,cv2,logging,sys,subprocess,shlex,os
+import time, json,logging,sys,subprocess,shlex,os
 from queue import Queue
 
 

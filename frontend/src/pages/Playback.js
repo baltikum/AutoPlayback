@@ -15,7 +15,7 @@ import '../components/css/video-holder.css'
 const Playback = () => {
 	const [playbacks,setPlayback] = useState([])
     const [playing, setPlaying] = useState(true)
-    const [videoSource, setVideoSource ] = useState([])
+    const [videoSource, setVideoSource ] = useState('/playback/0.mp4')
 
 	/* Fetches array with info about recordings files*/
 	const fetchPlayback = async () => {
@@ -39,12 +39,24 @@ const Playback = () => {
         setPlaying(true)
     },[playbacks,videoSource]);  
 
+	
+
 	return (
 		<div className="container">
 			<div className="video-holder">
 
 				<h1>Playback</h1>
-				<ReactPlayer url='/playback/0.mp4' playing={playing}  controls={true} muted />
+
+				<ReactPlayer 
+					url={videoSource}
+					playing={playing}  
+					controls={true} 
+					muted
+					onReady={() => console.log('VIDEO ready')} 
+					onStart={() => console.log('VIDEO start')} 
+					onEnded={() => setVideoSource('/playback/1.mp4')}
+				/>
+
 			</div>
 		</div>
 	);
