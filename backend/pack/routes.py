@@ -99,9 +99,12 @@ def create_new_user():
     password = request.json['password']
     email = request.json['email']
     device = request.json['device']
+    salt = request.json['salt']
+
+    print( f'{name}:{username}:{password}:{email}:{device}:{salt}')
 
     #create a user
-    user = SystemUsers(name,username,hashedPassword,email,0,device)
+    user = SystemUsers(name,username,password,email,0,device,salt)
 
     #submit to database
     db.session.add(user)
