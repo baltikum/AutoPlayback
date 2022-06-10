@@ -27,8 +27,7 @@ function AddUser ({postNewUser, setChoice})  {
         </div>
 
         <div className="input-group input-group-lg">
-            <input className="form-control input-add" type="text" name="user_email" maxlength="15" 
-                pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$" placeholder="192.168.0.0" required />
+            <input className="form-control input-add" type="text" name="user_email" maxlength="15" placeholder="mail@email.com" required />
         </div>
 
         <div className="input-group input-group-lg">
@@ -36,15 +35,15 @@ function AddUser ({postNewUser, setChoice})  {
         </div>
 
         <div className="input-group input-group-lg">
-            <input className="form-control input-add" type="password" name="user_password"placeholder="Password" required />
+            <input className="form-control input-add" type="password" name="user_password" placeholder="Password" required />
         </div>
 
 
         <br />
 
         <h6>Presence Device MAC Address <i class="bi-wifi"></i></h6>
-        <div class="input-group input-group-lg">
-            <input id="device" class="form-control" type="text" placeholder="01-23-45-67-89-AB" maxlength="17"
+        <div className="input-group input-group-lg">
+            <input className="form-control" type="text" placeholder="01-23-45-67-89-AB" maxlength="17" name="user_device"
                 pattern="^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})|([0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}\\.[0-9a-fA-F]{4})$" />
         </div>
 
