@@ -10,3 +10,10 @@
       text-align: center;
       border-radius: 25px;
 }
+
+.player-wrapper {
+      text-align: center;
+      align-items: center;
+      justify-content: center;
+
+}

@@ -14,5 +14,11 @@
 
 
 .input-add {
-    margin-bottom: 2px;
+    margin-bottom: 5px;
+    border-radius: 45px;
+}
+
+
+.button-add {
+    margin: 5px;
 }

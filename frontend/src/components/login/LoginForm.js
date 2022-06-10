@@ -32,4 +32,4 @@ function LoginForm ({postSubmit})  {
     )
 }
 
-export default LoginForm
+export default LoginForm;

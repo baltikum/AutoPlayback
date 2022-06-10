@@ -44,7 +44,9 @@ function Login ({setLoggedIn, setLoggedInUser, loginStatus }) {
           event.preventDefault();
         
           var { uname, pass } = document.forms[0];
-        
+          console.log(uname.value)
+          console.log(pass)
+
           const userData = database.find((user) => user.username === uname.value);
         
           if (userData) {

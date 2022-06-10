@@ -91,7 +91,7 @@ def serve_livesources():
 
 
 #create new user request
-@app.route('/newuser', methods= ['POST'])
+@app.route('/add_user', methods= ['POST'])
 def create_new_user():
     #fetch data from fields
     name = request.json['name']
@@ -109,6 +109,8 @@ def create_new_user():
 
     #returns data as json
     return format_userdata(user)
+
+
 #Format json for succesfull login requests
 def format_userdata(user):
     return {
@@ -120,10 +122,9 @@ def format_userdata(user):
         "device": user.device,
         "created_at": user.created_at
     }
-#login page route
-@app.route('/login', methods= ['GET'])
-def login_page():
-    return render_template(login.html)
+
+
+
 #login submit request
 @app.route('/login', methods= ['POST'])
 def login_request():
@@ -135,6 +136,10 @@ def login_request():
         return format_userdata(user)
     else:
         return 'Username not found'
+
+
+
+
 #get full list of camera configurations as json
 @app.route('/cameras', methods = ['GET'])
 def get_cameras():
@@ -154,8 +159,11 @@ def format_camera(camera):
         "address": camera.address,
         "added_at": camera.added_at
     }
+
+
+
 #Add new camera
-@app.route('/cameras', methods = ['POST'])
+@app.route('/add_camera', methods = ['POST'])
 def add_new_camera():
     #fetch data from fields
     name = request.json['name']
@@ -172,14 +180,14 @@ def add_new_camera():
 
     return 'Camera added.'
 #delete camera by id
-@app.route('/cameras/<id>', methods= ['DELETE'])
+@app.route('/delete_camera/<id>', methods= ['DELETE'])
 def delete_camera(id):
     camera = Camera.query.filter_by(id=id).one()
     db.session.delete(camera)
     db.session.commit()
     return 'Camera deleted.'
 #update camera by id
-@app.route('/cameras/<id>', methods= ['PUT'])
+@app.route('/edit_camera/<id>', methods= ['PUT'])
 def update_camera(id):
     #Find camera
     camera = Camera.query.filter_by(id=id)

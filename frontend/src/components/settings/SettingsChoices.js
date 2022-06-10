@@ -1,38 +1,126 @@
-import React from 'react'
+import React, {useState} from 'react'
 
-const SettingsChoices = ( ) => {
-    return (
-        <div>
+import AddCamera from './AddCamera'
+import EditCamera from './EditCamera'
+import AddUser from './AddUser'
+import EditUser from './EditUser'
+
+import axios from 'axios'
+
+import '../css/form-holder.css'
+
+const SettingsChoices = () => {
+
+
+    const [choice, setChoice] = useState(false)
+    const [content, setContent ] = useState()
+
+
+    const postNewCamera = async (event) => {
+
+        event.preventDefault();
+        var { camera_name, camera_username, camera_password, camera_address } = document.forms[0];
+
+        
+        axios.post('/add_camera', {'name': camera_name.value,'username':camera_username.value,'password':camera_password.value,'address':camera_address.value} ).then(
+            (response) => {
+                console.log(response);
+            },
+            (error) => {
+                  console.log(error);
+            }
+        );
+    }
+    const postEditCamera = async (event) => {
+
+        event.preventDefault();
+        var { camera_id, camera_name, camera_username, camera_password, camera_address } = document.forms[0];
+
+        axios.post(('/edit_camera/' + camera_id.value), {'name': camera_name.value,'username':camera_username.value,'password':camera_password.value,'address':camera_address.value} ).then(
+            (response) => {
+                console.log(response);
+            },
+            (error) => {
+                  console.log(error);
+            }
+        );
+    }
+
+    const postNewUser = async (event) => {
+
+        event.preventDefault();
+        var { user_name, user_username, user_password, user_email,user_device } = document.forms[0];
+
+        
+        axios.post('/add_user', {'name': user_name.value,'username':user_username.value,'password':user_password.value,'email':user_email.value,'device':user_device.value} ).then(
+            (response) => {
+                console.log(response);
+            },
+            (error) => {
+                  console.log(error);
+            }
+        );
+    }
+    const postEditUser = async (event) => {
+
+        event.preventDefault();
+        var { user_id, user_name, user_username, user_password, user_email, user_device } = document.forms[0];
+
+        
+        axios.post(('/edit_user/' + user_id.value), {'name': user_name.value,'username':user_username.value,'password':user_password.value,'email':user_email.value,'device':user_device.value} ).then(
+            (response) => {
+                console.log(response);
+            },
+            (error) => {
+                  console.log(error);
+            }
+        );
+    }
+
+
+
+
+
+    const generateAddCamera = (event) => {
+        setChoice(true)
+        setContent(<AddCamera postNewCamera={postNewCamera} setChoice={setChoice} />)
+    }
+    const generateEditCamera = (event) => {
+        setChoice(true)
+        setContent(<EditCamera postNewCamera={postEditCamera} setChoice={setChoice} />)
+    }
+    const generateAddUser = (event) => {
+        setChoice(true)
+        setContent(<AddUser postNewUser={postNewUser} setChoice={setChoice} />)
+    }
+    const generateEditUser = (event) => {
+        setChoice(true)
+        setContent(<EditUser postEditUser={postEditUser} setChoice={setChoice} />)
+    }
+
+
+
+
+    const settingsForm = (
+        <>
             <h1>Settings <i className="bi-gear-fill"></i></h1>
             <h6>Choose setting</h6>
-
-            <a href="addcamera.html"><button id="add-camera" type="button" className="btn btn-info btn-lg">Add Camera</button></a>
-            <a href="editcamera.html"><button id="edit-camera" type="button" className="btn btn-secondary btn-lg">Edit Camera</button></a>
+            <button onClick={generateAddCamera} type="button" className="btn btn-info btn-lg button-add">Add Camera</button>
+            <button onClick={generateEditCamera} type="button" className="btn btn-info btn-lg button-add">Edit Camera</button>
             
-            <a href="adduser.html"><button id="add-user"type="button" className="btn btn-info btn-lg">Add User</button></a>
-            <a href="edituser.html"><button id="edit-user"type="button" className="btn btn-secondary btn-lg">Edit User</button></a>
+            <button onClick={generateAddUser} type="button" className="btn btn-info btn-lg button-add">Add User</button>
+            <button onClick={generateEditUser} type="button" className="btn btn-info btn-lg button-add">Edit User</button>
 
-            <a href="addlayout.html"><button id="add-layout"type="button" className="btn btn-info btn-lg">Add Layout</button></a>
-            <a href="editlayout.html"><button id="edit-layout"type="button" className="btn btn-secondary btn-lg">Edit Layout</button></a>
+            <button type="button" className="btn btn-info btn-lg button-add">Network Settings</button>
+        </>
+      );
 
-            <a href="storage.html"><button id="edit-storage" type="button" className="btn btn-info btn-lg">Storage Settings</button></a>
-            <a href="network.html"><button id="edit-network"type="button" className="btn btn-info btn-lg">Network Settings</button></a>
+    return (
+        <>
+            
+        {choice ? content : settingsForm  }
 
-
-                {/* SMTP for="flexSwitchCheckDefault"*/}
-                <div className="form-check form-switch">
-                    <input className="form-check-input" type="checkbox" id="flexSwitchCheckDefault" />
-                    <label className="form-check-label" >SMTP Notifications</label>
-                </div>
-
-                {/* Presence startup for="flexSwitchCheckDefault"*/}
-                <div className="form-check form-switch">
-                    <input className="form-check-input" type="checkbox" id="flexSwitchCheckDefault" />
-                    <label className="form-check-label" >Automatic Playback </label>
-                </div>
-
-            <a href="index.html"><button id="close" type="button" className="btn btn-secondary btn-lg">Return</button></a>
-        </div>
+        </>
     )
 }
 
