@@ -123,14 +123,23 @@ def format_userdata(user):
         "created_at": user.created_at
     }
 
+#query db for user, fetch password salt
+@app.route('/query_user_salt', methods= ['POST'])
+def query_user():
+    username = request.json['username']
+    user = SystemUsers.query.filter_by(username=username)
 
+    if user:
+        return { 'status':True, 'salt':user.salt }
+    else:
+        return { 'status':False } 
 
 #login submit request
 @app.route('/login', methods= ['POST'])
 def login_request():
     username = request.json['username']
     password = request.json['password']
-    
+
     print( f'{username}{password}')
 
     user = SystemUsers.query.filter_by(username=username)

@@ -49,8 +49,7 @@ function App() {
                               </Protected>
                         } />
                         
-                        <Route path='/live' element={<Live />} />
-
+                        <Route path='/live' element={<Settings />} />
 
                         <Route path='/settings' element={
                               <Protected isLoggedIn={loggedIn}>
