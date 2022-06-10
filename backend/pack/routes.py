@@ -8,7 +8,6 @@ import traceback,logging,json,os,re
 from queue import Queue
 
 
-
 """
 
 @app.route('/live/<url>', methods=['GET'])
@@ -102,7 +101,7 @@ def create_new_user():
     device = request.json['device']
 
     #create a user
-    user = SystemUsers(name,username,password,email,0,device)
+    user = SystemUsers(name,username,hashedPassword,email,0,device)
 
     #submit to database
     db.session.add(user)
@@ -131,12 +130,19 @@ def format_userdata(user):
 def login_request():
     username = request.json['username']
     password = request.json['password']
+    
+    print( f'{username}{password}')
+
     user = SystemUsers.query.filter_by(username=username)
 
     if user:
-        return format_userdata(user)
+        if password == user.password:
+            userData = format_userdata(user)
+            return userData
+
     else:
         return 'Username not found'
+    
 
 
 

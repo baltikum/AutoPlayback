@@ -7,7 +7,8 @@ import LoginTop from '../components/login/LoginTop'
 import LoginForm from '../components/login/LoginForm'
 import LoginQuit from '../components/login/LoginQuit'
 
-
+import axios from 'axios'
+import bcrypt from 'bcryptjs'
 
 
 function Login ({setLoggedIn, setLoggedInUser, loginStatus }) {
@@ -44,10 +45,24 @@ function Login ({setLoggedIn, setLoggedInUser, loginStatus }) {
           event.preventDefault();
         
           var { uname, pass } = document.forms[0];
-          pass = bcrypt.hashSync(pass.value, 'autoplayback_salt')
+
+          axios.post('/query_user_salt', {'username': uname.value } ).then(
+            (response) => {
+              if ( response.status ) {
+                pass = bcrypt.hashSync(pass.value, response.salt)
+              } else {
+                return 'User not found'
+              }
+              console.log(response);
+            },
+            (error) => {
+                  console.log(error);
+            }
+          );
   
           axios.post('/login', {'username': uname.value, 'password': pass } ).then(
               (response) => {
+                userData = response.userData
                 localStorage.setItem('username', userData.username )
                 localStorage.setItem('privilege', userData.privilege )
                 localStorage.setItem('user', userData )    

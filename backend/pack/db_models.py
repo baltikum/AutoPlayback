@@ -28,6 +28,7 @@ class SystemUsers(db.Model):
     email = db.Column(db.String(100),nullable=False,unique=True)
     privilege = db.Column(db.String(10),nullable=False,default='user')
     device = db.Column(db.String(20),nullable=True)
+    salt = db.Column(db.String(30),nullable=False)
     created_at = db.Column(db.DateTime, nullable=False,default=datetime.utcnow)
 
     def __repr__(self):
