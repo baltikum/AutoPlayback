@@ -8,11 +8,6 @@ import '../components/css/video-holder.css'
 
 
 
-//onEnded={() => setNextSource()}
-
-
-
-
 const Playback = () => {
 	const [playbacks,setPlayback] = useState(['http://192.168.0.5:5000/playback/0.mp4','http://192.168.0.5:5000/playback/1.mp4']);
     const [playing, setPlaying] = useState(true);
