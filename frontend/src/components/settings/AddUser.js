@@ -1,5 +1,5 @@
 import React from 'react'
-
+import bcrypt from 'bcryptjs'
 import '../css/form-holder.css'
 
 
@@ -39,7 +39,7 @@ function AddUser ({postNewUser, setChoice})  {
         </div>
 
         <div className="input-group input-group-lg">
-            <select className="form-control" name="setting-choiceuser_privilege">
+            <select className="form-control input-add" name="setting-choiceuser_privilege">
                 <option value="0">Administrator</option>
                 <option value="1">Live and Playback</option>
                 <option value="2">Live</option>

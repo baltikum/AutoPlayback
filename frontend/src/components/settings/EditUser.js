@@ -50,11 +50,11 @@ function EditUser ({postEditUser, setChoice})  {
 <>
 
     <h1>Edit User <i class="bi-person-lines-fill"></i></h1>
-    <h6>Don't forget to save</h6>
+    <h6>Choose user to edit <i class="credit-card-2-front-fill"></i></h6>
 
     <form onSubmit={handleSubmit} >
-
-        <div className="input-group input-group-lg">
+        
+        <div className="input-group input-group-lg input-add">
             <select onChange={selectUser} className="form-control" name="user-choice">
                 {configuredUsers.map( (users,index)=>
                         (
@@ -64,6 +64,9 @@ function EditUser ({postEditUser, setChoice})  {
                 }
             </select>
         </div>
+
+        <br />
+
 
         <div className="input-group input-group-lg">
             <input className="form-control input-add" type="text" name="user_id" placeholder={userId} required />
@@ -82,6 +85,13 @@ function EditUser ({postEditUser, setChoice})  {
             <input className="form-control input-add" type="password" name="user_password" placeholder={userPassword} required />
         </div>
 
+        <div className="input-group input-group-lg">
+            <select className="form-control input-add" name="setting-choiceuser_privilege">
+                <option value="0">Administrator</option>
+                <option value="1">Live and Playback</option>
+                <option value="2">Live</option>
+            </select>
+        </div>
 
         <br />
 
@@ -91,7 +101,9 @@ function EditUser ({postEditUser, setChoice})  {
                 pattern="^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})|([0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}\\.[0-9a-fA-F]{4})$" />
         </div>
 
-    <br />
+
+
+        <br />
 
         <button id="submit" type="submit" class="btn btn-info btn-lg button-add">Save</button>
         <button onClick={handleReturn} type="button" class="btn btn-secondary btn-lg button-add">Back</button>

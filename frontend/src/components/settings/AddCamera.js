@@ -16,7 +16,7 @@ function AddCamera ({postNewCamera, setChoice})  {
 <>
 
     <h1>Add Camera <i class="bi-plus-circle-fill"></i></h1>
-    <h6>Enter IP address and credentials</h6>
+    <h6>Enter IP address and credentials <i class="bi bi-card-checklist"></i></h6>
 
     <form onSubmit={handleSubmit} >
 
@@ -37,6 +37,16 @@ function AddCamera ({postNewCamera, setChoice})  {
             <input className="form-control input-add" type="password" name="camera_password"placeholder="Password" required />
         </div>
 
+
+        <br />
+
+        <div className="input-group input-group-lg">
+            <select className="form-control input-add" name="camera_settings">
+                <option value="0">1280x720@25FPS</option>
+                <option value="1">1280x720@18FPS</option>
+                <option value="2">1280x720@8FPS</option>
+            </select>
+        </div>
 
         <br />
 

@@ -20,70 +20,90 @@ const SettingsChoices = () => {
     const postNewCamera = async (event) => {
 
         event.preventDefault();
-        var { camera_name, camera_username, camera_password, camera_address } = document.forms[0];
+        var { camera_name, camera_username, 
+            camera_password, camera_address, camera_settings } = document.forms[0];
 
         
-        axios.post('/add_camera', {'name': camera_name.value,'username':camera_username.value,'password':camera_password.value,'address':camera_address.value} ).then(
-            (response) => {
-                console.log(response);
-            },
-            (error) => {
-                  console.log(error);
-            }
+        axios.post('/add_camera', {
+            'name': camera_name.value,
+            'username':camera_username.value,
+            'password':camera_password.value,
+            'address':camera_address.value, 
+            'settings':camera_settings.value } ).then(
+
+                (response) => {
+                    console.log(response);
+                },
+                (error) => {
+                    console.log(error);
+                }
         );
     }
     const postEditCamera = async (event) => {
 
         event.preventDefault();
-        var { camera_id, camera_name, camera_username, camera_password, camera_address } = document.forms[0];
+        var { camera_id, camera_name, camera_username, 
+            camera_password, camera_address, camera_settings } = document.forms[0];
 
-        axios.post(('/edit_camera/' + camera_id.value), {'name': camera_name.value,'username':camera_username.value,'password':camera_password.value,'address':camera_address.value} ).then(
-            (response) => {
-                console.log(response);
-            },
-            (error) => {
-                  console.log(error);
-            }
+        axios.post(('/edit_camera/' + camera_id.value), {
+            'name': camera_name.value,
+            'username':camera_username.value,
+            'password':camera_password.value,
+            'address':camera_address.value,
+            'settings': camera_settings.value } ).then(
+                (response) => {
+                    console.log(response);
+                },
+                (error) => {
+                    console.log(error);
+                }
         );
     }
 
     const salta = bcrypt.genSaltSync(6)
-    
+
     const postNewUser = async (event) => {
 
         event.preventDefault();
         var { user_name, user_username, user_password, user_email,user_device } = document.forms[0];
-        
-        console.log(salta)
         user_password = bcrypt.hashSync(user_password.value, salta)
-        console.log(salta + '::::'  + user_password  )
-        axios.post('/add_user', {'name': user_name.value,'username':user_username.value,'password':user_password,'email':user_email.value,'device':user_device.value, 'salt':salta} ).then(
-            (response) => {
-                console.log(response);
-            },
-            (error) => {
-                console.log(error);
-            }
+
+        axios.post('/add_user', {
+            'name': user_name.value,
+            'username':user_username.value,
+            'password':user_password,
+            'email':user_email.value,
+            'device':user_device.value,
+            'salt': salta } ).then(
+                (response) => {
+                    console.log(response);
+                },
+                (error) => {
+                    console.log(error);
+                }
         );
     }
     const postEditUser = async (event) => {
 
         event.preventDefault();
-        var { user_id, user_name, user_username, user_password, user_email, user_device } = document.forms[0];
+        var { user_id, user_name, user_username, user_password, user_email, user_device, user_privilege } = document.forms[0];
 
         
-        axios.post(('/edit_user/' + user_id.value), {'name': user_name.value,'username':user_username.value,'password':user_password.value,'email':user_email.value,'device':user_device.value} ).then(
-            (response) => {
-                console.log(response);
-            },
-            (error) => {
-                  console.log(error);
-            }
+        axios.post(('/edit_user/' + user_id.value), {
+            'name': user_name.value,
+            'username':user_username.value,
+            'password':user_password.value,
+            'email':user_email.value,
+            'device':user_device.value,
+            'privilege':user_privilege.value } ).then(
+                (response) => {
+                    console.log(response);
+                },
+                (error) => {
+                    console.log(error);
+                }
         );
     }
-
-
-
 
 
     const generateAddCamera = (event) => {
