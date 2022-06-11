@@ -1,3 +1,5 @@
+
+import sqlite3
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
 from datetime import datetime
@@ -9,11 +11,17 @@ db_password = os.environ['DB_PASSW']
 db_address = os.environ['DB_ADDRESS']
 db_name = os.environ['DB_NAME']
 #autoplayback_db
+print(db_username)
+
+print(db_name)
 
 app = Flask(__name__)
+print(db_password)
 
-#Databas
-app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{db_username}:{db_password}#@localhost/{db_name}'
+#Databas postgresql
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///autoplayback_db.db'
+
+#app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{db_username}:{db_password}#@localhost/{db_name}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -34,13 +42,14 @@ class SystemUsers(db.Model):
     def __repr__(self):
         return f'User {self.name} joined the system {self.created_at}'
 
-    def __init__(self,name,username,password,email,privilege,device):
+    def __init__(self,name,username,password,email,privilege,device,salt):
         self.name = name
         self.username = username
         self.password = password
         self.email = email
         self.privilege = privilege
         self.device = device
+        self.salt = salt
 
 
 #database table model for camera configurations
