@@ -102,7 +102,7 @@ def create_new_user():
     salt = request.json['salt']
 
     print( f'{name}:{username}:{password}:{email}:{device}:{salt}')
-
+    
     #create a user
     user = SystemUsers(name,username,password,email,0,device,salt)
 
@@ -117,23 +117,24 @@ def create_new_user():
 #Format json for succesfull login requests
 def format_userdata(user):
     return {
-        "id": user.id,
-        "name": user.name,
-        "username ": user.username ,
-        "email": user.email,
-        "privilege": user.privilege,
-        "device": user.device,
-        "created_at": user.created_at
+        'id': user.id,
+        'name': user.name,
+        'username': user.username ,
+        'email': user.email,
+        'privilege': user.privilege,
+        'device': user.device,
+        'created_at': user.created_at
     }
 
 #query db for user, fetch password salt
 @app.route('/query_user_salt', methods= ['POST'])
 def query_user():
     username = request.json['username']
-    user = SystemUsers.query.filter_by(username=username)
+    userQuery = SystemUsers.query.filter_by(username=username).first()
     
-    if user.username == username:
-        return { 'status':True, 'salt':user.salt }
+    
+    if userQuery.username == username:
+        return { 'status':True, 'salt':userQuery.salt }
     else:
         return { 'status':False } 
 
@@ -142,13 +143,18 @@ def query_user():
 def login_request():
     username = request.json['username']
     password = request.json['password']
+    print(f'{username}:{password}')
 
-    user = SystemUsers.query.filter_by(username=username)
-
-    if user:
-        if password == user.password:
-            userData = format_userdata(user)
+    userQuery = SystemUsers.query.filter_by(username=username).first()
+    if userQuery.username == username:
+        
+        
+        if password == userQuery.password:
+            userData = format_userdata(userQuery)
+            print(userData)
             return userData
+            
+        return 'wrong password'
 
     else:
         return 'Username not found'
