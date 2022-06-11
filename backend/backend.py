@@ -1,7 +1,7 @@
 
 import urllib.parse as urlparse
 
-from pack import app,configured_cameras
+from pack import app,db,configured_cameras
 
 from datetime import datetime, timedelta
 import traceback
@@ -28,7 +28,7 @@ from concurrent.futures import ThreadPoolExecutor
 thread_pool = ThreadPoolExecutor()
 
 
-archived_video_playback = [] #Should be written to database
+video_playback = [] #Should be written to database
 
 
 camera_out_queues = []
@@ -252,6 +252,7 @@ def camera_recording_thread(args):
 
 #Distributes system messages
 def message_controller(args):
+    global video_playback
     #threadqueues
     camera_out_queues = args[0]
     camera_in_queues = args[1]
@@ -283,9 +284,7 @@ def message_controller(args):
                     break
 
             if ret:
-                pass
-                #print(ret)
-                #Stoppa i databsen
+                video_playback.append(ret)
 
 
             #Check content of received message
@@ -320,6 +319,7 @@ def message_controller(args):
 #Receiving from presence module
 @app.route('/presence', methods=['POST'])
 def presence_detected():
+    global video_playback,db
     try:
         res = request.json
         status = str(res['presence'])
@@ -330,6 +330,12 @@ def presence_detected():
         if status =='active': #Home
             presence_data = '{ "presence" : "1" }'
             _ = controller_queue.put(presence_data)
+            
+            if len(video_playback) > 0:
+                recording = Recordings(video_playback,datetime.datetime.now())
+                db.session.add(recording)
+                db.session.commit()
+
             res = True
         else : #Away
             presence_data = '{ "presence" : "0" }'

@@ -3,6 +3,7 @@ from datetime import datetime
 from flask import render_template, request, Response
 from pack.camera import Camera
 from pack import app, video_playback_entrys,configured_cameras,db
+from sqlalchemy import func 
 from pack.db_models import SystemUsers,CameraConfigs,Recordings
 import traceback,logging,json,os,re
 from queue import Queue
@@ -77,9 +78,22 @@ def playback(filename):
 
 @app.route('/playback/fetch', methods=['GET'])
 def serve_playback():
-    global video_playback_entrys
-    return json.dumps(video_playback_entrys)
+    latest_recording = Recordings.query(func.max(Recordings.id)).first()
+    print(latest_recording)
+    print(latest_recording.content)
+    return json.dumps(latest_recording.content)
 
+
+@app.route('/playback/store', methods=['POST'])
+def store_playback():
+    recordings = request.json['recordings']
+
+    recording = Recordings(recordings, datetime.datetime.now())
+
+    db.session.add(recording)
+    db.session.commit()
+    
+    return { 'status': True }
 
 
 @app.route('/live/sources', methods=['GET'])
