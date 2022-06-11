@@ -88,6 +88,12 @@ def serve_livesources():
 
 
 
+#fetch configured userdata
+@app.route('/get_users', methods= ['GET'])
+def get_users():
+    all_users = SystemUsers.query.all()
+    return { 'users': all_users }
+
 
 
 #create new user request
