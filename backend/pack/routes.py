@@ -92,7 +92,11 @@ def serve_livesources():
 @app.route('/get_users', methods= ['GET'])
 def get_users():
     all_users = SystemUsers.query.all()
-    return { 'users': all_users }
+    json_users = []
+    for user in all_users:
+        json_users.append(format_userdata(user))
+        
+    return { 'users': json_users }
 
 
 
@@ -172,7 +176,7 @@ def login_request():
 #get full list of camera configurations as json
 @app.route('/get_cameras', methods = ['GET'])
 def get_cameras():
-    cameras = Camera.query.order_by(Camera.id.asc()).all()
+    cameras = CameraConfigs.query.order_by(CameraConfigs.id.asc()).all()
     cameras_json = []
     for camera in cameras:
         cameras_json.append(format_camera(camera))
@@ -184,8 +188,8 @@ def format_camera(camera):
         "id": camera.id,
         "name": camera.name,
         "username": camera.username,
-        "resolution": camera.resolution,
-        "fps": camera.fps,
+        "password": camera.password,
+        "settings": camera.settings,
         "address": camera.address,
         "added_at": camera.added_at
     }
@@ -202,7 +206,7 @@ def add_new_camera():
     address = request.json['address']
 
     #create a new camera
-    camera = Camera(name,username,password,address)
+    camera = CameraConfigs(name,username,password,address)
 
     #submit to database
     db.session.add(camera)
@@ -212,7 +216,7 @@ def add_new_camera():
 #delete camera by id
 @app.route('/delete_camera/<id>', methods= ['DELETE'])
 def delete_camera(id):
-    camera = Camera.query.filter_by(id=id).one()
+    camera = CameraConfigs.query.filter_by(id=id).one()
     db.session.delete(camera)
     db.session.commit()
     return 'Camera deleted.'
@@ -220,7 +224,7 @@ def delete_camera(id):
 @app.route('/edit_camera/<id>', methods= ['PUT'])
 def update_camera(id):
     #Find camera
-    camera = Camera.query.filter_by(id=id)
+    camera = CameraConfigs.query.filter_by(id=id)
 
     #request new camera data
     name = request.json['name']
