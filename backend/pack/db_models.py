@@ -24,11 +24,11 @@ class SystemUsers(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     name = db.Column(db.String(100),nullable=False,default='User')
     username = db.Column(db.String(50),nullable=False,unique=True)
-    password = db.Column(db.String(50),nullable=False)
+    password = db.Column(db.String(200),nullable=False)
     email = db.Column(db.String(100),nullable=False,unique=True)
-    privilege = db.Column(db.String(10),nullable=False,default='user')
-    device = db.Column(db.String(20),nullable=True)
-    salt = db.Column(db.String(30),nullable=False)
+    privilege = db.Column(db.Integer,nullable=False,default='user')
+    device = db.Column(db.String(30),nullable=True)
+    salt = db.Column(db.String(100),nullable=False)
     created_at = db.Column(db.DateTime, nullable=False,default=datetime.utcnow)
 
     def __repr__(self):

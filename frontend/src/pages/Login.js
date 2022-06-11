@@ -44,39 +44,45 @@ function Login ({setLoggedIn, setLoggedInUser, loginStatus }) {
           
           event.preventDefault();
         
+
           var { uname, pass } = document.forms[0];
 
           axios.post('/query_user_salt', {'username': uname.value } ).then(
             (response) => {
-              if ( response.status ) {
-                pass = bcrypt.hashSync(pass.value, response.salt)
+              console.log('fan')
+              console.log(response.data)
+              console.log(response.data.salt)
+
+              if ( response.data.status ) {
+                pass = bcrypt.hashSync(pass.value, response.data.salt)
+                console.log(response.data.salt + '::::' + pass  )
+                axios.post('/login', {'username': uname.value, 'password': pass } ).then(
+                  (response) => {
+                    console.log(response.data)
+                    localStorage.setItem('username', response.data.username )
+                    localStorage.setItem('privilege', response.data.privilege )
+                    localStorage.setItem('user', response.data )    
+                    handleLogin(true)
+                    handleLoggedInUser(response.userData)
+                    setLoggedInState(true)     
+    
+    
+                  },
+                  (error) => {
+                        console.log(error);
+                  }
+              );
+              
               } else {
                 return 'User not found'
               }
-              console.log(response);
             },
             (error) => {
                   console.log(error);
             }
           );
   
-          axios.post('/login', {'username': uname.value, 'password': pass } ).then(
-              (response) => {
-                userData = response.userData
-                localStorage.setItem('username', userData.username )
-                localStorage.setItem('privilege', userData.privilege )
-                localStorage.setItem('user', userData )    
-                handleLogin(true)
-                handleLoggedInUser(userData)
-                setLoggedInState(true)     
 
-                console.log(response);
-
-              },
-              (error) => {
-                    console.log(error);
-              }
-          );
 
 
           const userData = database.find((user) => user.username === uname.value);
