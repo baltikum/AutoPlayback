@@ -50,16 +50,18 @@ class CameraConfigs(db.Model):
     username = db.Column(db.String(50),nullable=False)
     password = db.Column(db.String(50),nullable=False)
     address = db.Column(db.String(20),nullable=False, unique=True)
+    settings = db.Column(db.Integer, nullable=False, default=0)
     added_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     def __repr__(self):
         return f'Camera {self.id} {self.name} added at {self.created_at}'
 
-    def __init__(self,name,username,password,address):
+    def __init__(self,name,username,password,address,settings):
         self.name = name
         self.username = username
         self.password = password
         self.address = address
+        self.settings = settings
 
 
 class Recordings(db.Model):

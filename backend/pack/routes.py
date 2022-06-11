@@ -88,6 +88,9 @@ def serve_livesources():
 
 
 
+
+
+
 #fetch configured userdata
 @app.route('/get_users', methods= ['GET'])
 def get_users():
@@ -111,8 +114,7 @@ def create_new_user():
     device = request.json['device']
     salt = request.json['salt']
 
-    print( f'{name}:{username}:{password}:{email}:{device}:{salt}')
-    
+  
     #create a user
     user = SystemUsers(name,username,password,email,0,device,salt)
 
@@ -141,7 +143,7 @@ def format_userdata(user):
 def query_user():
     username = request.json['username']
     userQuery = SystemUsers.query.filter_by(username=username).first()
-    
+ 
     
     if userQuery.username == username:
         return { 'status':True, 'salt':userQuery.salt }
@@ -153,7 +155,6 @@ def query_user():
 def login_request():
     username = request.json['username']
     password = request.json['password']
-    print(f'{username}:{password}')
 
     userQuery = SystemUsers.query.filter_by(username=username).first()
     if userQuery.username == username:
@@ -161,7 +162,6 @@ def login_request():
         
         if password == userQuery.password:
             userData = format_userdata(userQuery)
-            print(userData)
             return userData
             
         return 'wrong password'
@@ -189,12 +189,10 @@ def format_camera(camera):
         "name": camera.name,
         "username": camera.username,
         "password": camera.password,
-        "settings": camera.settings,
         "address": camera.address,
+        "settings": camera.settings,
         "added_at": camera.added_at
     }
-
-
 
 #Add new camera
 @app.route('/add_camera', methods = ['POST'])
@@ -204,9 +202,10 @@ def add_new_camera():
     username = request.json['username']
     password = request.json['password']
     address = request.json['address']
+    settings = request.json['settings']
 
     #create a new camera
-    camera = CameraConfigs(name,username,password,address)
+    camera = CameraConfigs(name,username,password,address,settings)
 
     #submit to database
     db.session.add(camera)
@@ -220,6 +219,7 @@ def delete_camera(id):
     db.session.delete(camera)
     db.session.commit()
     return 'Camera deleted.'
+    
 #update camera by id
 @app.route('/edit_camera/<id>', methods= ['PUT'])
 def update_camera(id):
@@ -231,6 +231,7 @@ def update_camera(id):
     username = request.json['username']
     password = request.json['password']
     address = request.json['address']
+    settings = request.json['settings']
 
     #update data on camera
     camera.update(dict(name = name,
