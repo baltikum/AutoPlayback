@@ -84,6 +84,8 @@ def serve_playback():
     return json.dumps(latest_recording.content)
 
 
+
+#Store playback in database
 @app.route('/playback/store', methods=['POST'])
 def store_playback():
     recordings = request.json['recordings']
@@ -96,6 +98,8 @@ def store_playback():
     return { 'status': True }
 
 
+
+#Fetch live sources from frontend
 @app.route('/live/sources', methods=['GET'])
 def serve_livesources():
     live_list = []
@@ -108,6 +112,9 @@ def serve_livesources():
 
 
 
+
+##USER ROUTES
+
 #fetch configured userdata
 @app.route('/get_users', methods= ['GET'])
 def get_users():
@@ -117,9 +124,6 @@ def get_users():
         json_users.append(format_userdata(user))
         
     return { 'users': json_users }
-
-
-
 #create new user request
 @app.route('/add_user', methods= ['POST'])
 def create_new_user():
@@ -141,8 +145,6 @@ def create_new_user():
 
     #returns data as json
     return format_userdata(user)
-
-
 #Format json for succesfull login requests
 def format_userdata(user):
     return {
@@ -154,7 +156,6 @@ def format_userdata(user):
         'device': user.device,
         'created_at': user.created_at
     }
-
 #query db for user, fetch password salt
 @app.route('/query_user_salt', methods= ['POST'])
 def query_user():
@@ -166,7 +167,6 @@ def query_user():
         return { 'status':True, 'salt':userQuery.salt }
     else:
         return { 'status':False } 
-
 #login submit request
 @app.route('/login', methods= ['POST'])
 def login_request():
@@ -190,6 +190,9 @@ def login_request():
 
 
 
+
+##CAMERA ROUTES
+
 #get full list of camera configurations as json
 @app.route('/get_cameras', methods = ['GET'])
 def get_cameras():
@@ -198,7 +201,6 @@ def get_cameras():
     for camera in cameras:
         cameras_json.append(format_camera(camera))
     return {'cameras': cameras_json }
-
 #Format camera configurations to json
 def format_camera(camera):
     return {
@@ -210,7 +212,6 @@ def format_camera(camera):
         "settings": camera.settings,
         "added_at": camera.added_at
     }
-
 #Add new camera
 @app.route('/add_camera', methods = ['POST'])
 def add_new_camera():
@@ -236,7 +237,6 @@ def delete_camera(id):
     db.session.delete(camera)
     db.session.commit()
     return 'Camera deleted.'
-    
 #update camera by id
 @app.route('/edit_camera/<id>', methods= ['PUT'])
 def update_camera(id):

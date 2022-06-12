@@ -333,7 +333,7 @@ def presence_detected():
             presence_status = True
 
             if len(video_playback) > 0:
-                recording = Recordings(video_playback,datetime.datetime.now())
+                recording = Recordings('{"playback":'+ video_playback + '}',datetime.datetime.now())
                 db.session.add(recording)
                 db.session.commit()
 
@@ -419,6 +419,27 @@ if __name__ == '__main__':
 
     #add message controller thread
     thread_pool.submit(message_controller,[camera_out_queues,camera_in_queues,controller_queue])
+
+
+
+    entry = ({"playback":[
+            {
+                "video_start_time": "2022-03-03 12:00",
+                "video_end_time":"2022-03-03 13:00",
+                "video_camera_id": "0",
+                "video_file": "0.mp4"
+            },
+            {
+                "video_start_time": "2022-03-03 12:00",
+                "video_end_time":"2022-03-03 13:00",
+                "video_camera_id": "0",
+                "video_file": "0.mp4"
+            }
+        ]
+    });
+    recording = Recordings(entry,datetime.datetime.now())
+    db.session.add(recording)
+    db.session.commit()
 
     presence_data = '{ "presence" : "0" }'
     controller_queue.put(presence_data)

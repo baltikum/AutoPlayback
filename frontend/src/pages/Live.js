@@ -10,7 +10,7 @@ import '../components/css/video-holder.css'
 
 const Live = () => {
 
-    const [allSources,setAllSources] = useState(['http://192.168.0.5:666/0.m3u8','http://192.168.0.5:666/1.m3u8'])
+    const [allSources,setAllSources] = useState([])
     const [sourceIndex, setSourceIndex ] = useState(0)
 
     const nextSource = (event) => {
@@ -26,8 +26,7 @@ const Live = () => {
 
         axios.get('/live/sources').then(
               (response) => {
-                    setAllSources(JSON.parse(response.data.live))
-                    console.log(allSources);
+                    setAllSources(response.data.live)
               },
               (error) => {
                     console.log(error);
@@ -50,15 +49,21 @@ return (
             <ReactPlayer 
                 className='player-wrapper'
                 url={allSources[sourceIndex]} 
-                width='75%'
-                height='75%'
+                width='50%'
+                height='50%'
                 playing={true}  
                 controls={false} 
                 muted 
                 onClick={nextSource} 
             />
 
-            <button type="button" className="btn btn-info btn-lg" onClick={nextSource}>Next</ button>
+            <button 
+                type="button" 
+                className="btn btn-info btn-lg" 
+                onClick={nextSource}>
+                    Next
+            </ button>
+
 		</div>
 
         
