@@ -82,7 +82,6 @@ def serve_playback():
 
     # latest_recording = Recordings.query(func.max(Recordings.id)).first()
     print(latest_recording)
-    print(latest_recording.content)
     return { 'recordings' : latest_recording.content }
 
 
