@@ -78,7 +78,7 @@ def playback(filename):
 
 @app.route('/playback/fetch', methods=['GET'])
 def serve_playback():
-    latest_recording = db.session.query(func.max(Recordings.id)).first()
+    latest_recording = db.session.query(func.max(Recordings.id),Recordings.content).first()
 
     # latest_recording = Recordings.query(func.max(Recordings.id)).first()
     print(latest_recording)
