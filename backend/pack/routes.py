@@ -78,10 +78,12 @@ def playback(filename):
 
 @app.route('/playback/fetch', methods=['GET'])
 def serve_playback():
-    latest_recording = Recordings.query(func.max(Recordings.id)).first()
+    latest_recording = Recordings.query.filter(Recordings.id.desc()).first()
+
+    # latest_recording = Recordings.query(func.max(Recordings.id)).first()
     print(latest_recording)
     print(latest_recording.content)
-    return json.dumps(latest_recording.content)
+    return { 'recordings' : latest_recording.content }
 
 
 
