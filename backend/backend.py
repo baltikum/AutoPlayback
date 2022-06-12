@@ -424,14 +424,14 @@ if __name__ == '__main__':
 
     entry = ({"playback":[
             {
-                "video_start_time": datetime.now(),
-                "video_end_time":datetime.now(),
+                "video_start_time": str(datetime.now()),
+                "video_end_time": str(datetime.now()),
                 "video_camera_id": "0",
                 "video_file": "0.mp4"
             },
             {
-                "video_start_time": datetime.now(),
-                "video_end_time": datetime.now(),
+                "video_start_time": str(datetime.now()),
+                "video_end_time": str(datetime.now()),
                 "video_camera_id": "1",
                 "video_file": "1.mp4"
             }
