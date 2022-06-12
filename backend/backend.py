@@ -437,7 +437,9 @@ if __name__ == '__main__':
             }
         ]
     });
-    recording = Recordings(612,entry, datetime.now())
+
+    id = 612
+    recording = Recordings( id, json.dumps(entry), datetime.now())
     db.session.add(recording)
     db.session.commit()
 
