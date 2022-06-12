@@ -81,9 +81,7 @@ def serve_playback():
     latest_recording = db.session.query(func.max(Recordings.id),Recordings.content).first()
 
     # latest_recording = Recordings.query(func.max(Recordings.id)).first()
-    print(latest_recording[0])
-    print(latest_recording[1])
-    temp = json.dumps(latest_recording)
+    temp = json.dumps(latest_recording[1])
 
     return { 'recordings' : temp.content }
 
