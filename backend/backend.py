@@ -438,11 +438,6 @@ if __name__ == '__main__':
         ]
     });
 
-    id = 612
-    recording = Recordings( id, json.dumps(entry), datetime.now())
-    db.session.add(recording)
-    db.session.commit()
-
     presence_data = '{ "presence" : "0" }'
     controller_queue.put(presence_data)
 
