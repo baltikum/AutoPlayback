@@ -138,7 +138,7 @@ const SettingsChoices = () => {
             <button onClick={generateAddUser} type="button" className="btn btn-info btn-lg button-add">Add User</button>
             <button onClick={generateEditUser} type="button" className="btn btn-info btn-lg button-add">Edit User</button>
 
-            <button type="button" className="btn btn-info btn-lg button-add">Network Settings</button>
+            
         </>
       );
 

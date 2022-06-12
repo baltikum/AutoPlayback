@@ -27,8 +27,13 @@ const Playback = () => {
 	const fetchPlayback = async () => {
 		  axios.get('/playback/fetch').then(
 				(response) => {
-					  setPlayback(response.data);
-					  console.log(response.data);
+					var files = []
+					var temp = response.data.recordings.playback
+					temp.map(function(file){
+						files.push('http://192.168.0.5:5000/playback/' + file.video_file )
+					})
+					setPlayback(files);
+					console.log(playbacks)
 				},
 				(error) => {
 					  console.log(error);
@@ -52,7 +57,7 @@ const Playback = () => {
 			<div className="video-holder">
 
 				<h1>Playback</h1>
-				<div className='player-wrapper'>
+				<div className='player-wrapper' style={{display: 'flex', justifyContent: 'center'}} >
 					<ReactPlayer 
 						className="react-player"
 						url={playbacks[playbackIndex]}

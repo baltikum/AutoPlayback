@@ -45,17 +45,19 @@ return (
 	<div className="container">
 		<div className="video-holder">
 			<h1>Live</h1>
-
-            <ReactPlayer 
-                className='player-wrapper'
-                url={allSources[sourceIndex]} 
-                width='50%'
-                height='50%'
-                playing={true}  
-                controls={false} 
-                muted 
-                onClick={nextSource} 
-            />
+            <div className="player-wrapper" style={{display: 'flex', justifyContent: 'center'}}>
+                <ReactPlayer 
+                    className="react-player"
+                    url={allSources[sourceIndex]} 
+                    width='75%'
+                    height='75%'
+                    playing={true}  
+                    controls={false} 
+                    muted 
+                    onClick={nextSource}
+                    
+                />
+            </div>
 
             <button 
                 type="button" 
