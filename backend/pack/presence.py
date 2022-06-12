@@ -68,7 +68,7 @@ class Presence():
                             self.device = cec.Device(0)
                             self.device.power_on()
                             cec.set_active_source()
-                            p = subprocess.Popen('firefox http://localhost:3000/playback &', stdout=subprocess.PIPE, shell=True)
+                            p = subprocess.Popen('firefox http://localhost:3000/playback & sleep 5 && xdotool key F11', stdout=subprocess.PIPE, shell=True)
 
                         except:
                             logging.error('Connect a compatible hdmi device')
