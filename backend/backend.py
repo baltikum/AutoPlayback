@@ -27,7 +27,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 thread_pool = ThreadPoolExecutor()
 
-
+presence_status = False
 video_playback = [] #Should be written to database
 
 
@@ -319,7 +319,7 @@ def message_controller(args):
 #Receiving from presence module
 @app.route('/presence', methods=['POST'])
 def presence_detected():
-    global video_playback,db
+    global video_playback,db, presence_status
     try:
         res = request.json
         status = str(res['presence'])
@@ -330,21 +330,32 @@ def presence_detected():
         if status =='active': #Home
             presence_data = '{ "presence" : "1" }'
             _ = controller_queue.put(presence_data)
-            
+            presence_status = True
+
             if len(video_playback) > 0:
                 recording = Recordings(video_playback,datetime.datetime.now())
                 db.session.add(recording)
                 db.session.commit()
 
+            
+
             res = True
         else : #Away
             presence_data = '{ "presence" : "0" }'
             controller_queue.put(presence_data)
+            presence_status = False
             res = False
     except:
         logging.error('Presence failed to queue message to threads')
 
     return '{ "presence" : "' + str(res) + '" }'
+
+
+@app.route('/query_presence', methods=['GET'])
+def query_presence():
+    global presence_status
+    return presence_status
+
 #Incoming motion alarms
 @app.route('/motion', methods=['POST'])
 def motion_id():

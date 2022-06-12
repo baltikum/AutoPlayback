@@ -7,19 +7,20 @@ import React, { useState, useEffect }from 'react';
 import './App.css';
 
 import NavBar from './components/navbar/NavBar';
-import { BrowserRouter as Router, Routes, Route, Navigate }
+import { BrowserRouter as Router, Routes, Route }
 	from 'react-router-dom';
-
+      
+import axios from 'axios'
 
 import Playback from './pages/Playback';
 import Live from './pages/Live';
-//import Recorded from './pages/Recorded';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 
 import Protected from './components/Protected';
 
 require('dotenv').config()
+
 
 
 const LOCAL_STORAGE_KEY = 'AutoPlaybackApp.user'
@@ -34,6 +35,22 @@ function App() {
       const [loggedUser, setLoggedInUser ] = useState({})
 
       const [presence, setPresence] = useState(false);
+
+
+
+
+      useEffect(() => {
+            axios.get('/query_presence').then(
+                  (response) => {
+                        setPresence(response.data)
+                        console.log(response.data);
+                  },
+                  (error) => {
+                        console.log(error);
+                  }
+            ); 
+      },[]);
+
 //<Route exact path='/' element={<Playback />} />
 
       return (

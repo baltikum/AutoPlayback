@@ -76,11 +76,11 @@ function EditCamera ({postEditCamera, setChoice})  {
         <h6>Update IP address or credentials</h6>
 
         <div className="input-group input-group-lg">
-            <input className="form-control input-add" type="text" name="camera_id" placeholder={cameraId} required />
+            <input className="form-control input-add" type="text" name="camera_id" placeholder={cameraId} value={cameraId} required />
         </div>
 
         <div className="input-group input-group-lg">
-            <input className="form-control input-add" type="text" name="camera_name"placeholder={cameraName} required />
+            <input className="form-control input-add" type="text" name="camera_name"placeholder={cameraName} value={cameraName} required />
         </div>
 
         <div className="input-group input-group-lg">
@@ -97,7 +97,7 @@ function EditCamera ({postEditCamera, setChoice})  {
         </div>
 
         <div className="input-group input-group-lg">
-            <select className="form-control" name="setting-choice">
+            <select className="form-control" name="setting-choice" value={cameraSetting}>
                 <option value="0">1280x720@25FPS</option>
                 <option value="1">1280x720@18FPS</option>
                 <option value="2">1280x720@8FPS</option>
