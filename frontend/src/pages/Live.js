@@ -26,8 +26,8 @@ const Live = () => {
 
         axios.get('/live/sources').then(
               (response) => {
-                    setAllSources(response.data)
-                    console.log(response.data);
+                    setAllSources(JSON.parse(response.data))
+                    console.log(allSources);
               },
               (error) => {
                     console.log(error);
