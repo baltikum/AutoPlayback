@@ -101,7 +101,7 @@ def serve_livesources():
     live_list = []
     for entry in configured_cameras:
         live_list.append('http://192.168.0.5:666/'+str(entry.camera_id)+'.m3u8')
-    return live_list
+    return json.dumps(live_list)
 
 
 
