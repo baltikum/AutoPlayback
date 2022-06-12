@@ -8,7 +8,7 @@ import LoginForm from '../components/login/LoginForm'
 import LoginQuit from '../components/login/LoginQuit'
 
 import axios from 'axios'
-import bcrypt from 'bcryptjs'
+//import bcrypt from 'bcryptjs'
 
 
 function Login ({setLoggedIn, setLoggedInUser, loginStatus }) {
@@ -39,7 +39,8 @@ function Login ({setLoggedIn, setLoggedInUser, loginStatus }) {
               console.log(response.data.salt)
 
               if ( response.data.status ) {
-                pass = bcrypt.hashSync(pass.value, response.data.salt)
+                pass = pass.value
+                //pass = bcrypt.hashSync(pass.value, response.data.salt)
                 axios.post('/login', {'username': uname.value, 'password': pass } ).then(
                   (response) => {
                     console.log(response.data)

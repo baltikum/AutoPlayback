@@ -64,13 +64,16 @@ class Presence():
 
                         print(f'Status:[Online] for {output}')
                         try:
+                            print('testa start')
                             cec.init()
                             self.device = cec.Device(0)
                             self.device.power_on()
                             cec.set_active_source()
-                            p = subprocess.Popen('firefox http://localhost:3000/playback & sleep 5 && xdotool key F11', stdout=subprocess.PIPE, shell=True)
+                            p = subprocess.Popen('firefox http://192.168.0.31:3000/playback & sleep 5 && xdotool key F11', stdout=subprocess.PIPE, shell=True)
+                            print('startad')
 
                         except:
+                            traceback.print_exc()
                             logging.error('Connect a compatible hdmi device')
 
 
@@ -99,6 +102,7 @@ class Presence():
                                 logging.error('Connect a compatible hdmi device')
 
                 sleep(self.period) #self.period
+                print('sleep')
             except:
                 traceback.print_exc()
 

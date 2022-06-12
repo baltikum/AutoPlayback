@@ -6,7 +6,7 @@ import AddUser from './AddUser'
 import EditUser from './EditUser'
 
 import axios from 'axios'
-import bcrypt from 'bcryptjs'
+//import bcrypt from 'bcryptjs'
 
 import '../css/form-holder.css'
 
@@ -61,13 +61,14 @@ const SettingsChoices = () => {
         );
     }
 
-    const salta = bcrypt.genSaltSync(6)
+    //const salta = bcrypt.genSaltSync(6)
 
     const postNewUser = async (event) => {
 
         event.preventDefault();
         var { user_name, user_username, user_password, user_email,user_device } = document.forms[0];
-        user_password = bcrypt.hashSync(user_password.value, salta)
+        //user_password = bcrypt.hashSync(user_password.value, salta)
+        user_password = user_password.value
 
         axios.post('/add_user', {
             'name': user_name.value,
@@ -75,7 +76,7 @@ const SettingsChoices = () => {
             'password':user_password,
             'email':user_email.value,
             'device':user_device.value,
-            'salt': salta } ).then(
+            'salt': 'salt' } ).then(
                 (response) => {
                     console.log(response);
                 },
