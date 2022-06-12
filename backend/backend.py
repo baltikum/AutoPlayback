@@ -437,7 +437,7 @@ if __name__ == '__main__':
             }
         ]
     });
-    recording = Recordings(entry,datetime.now())
+    recording = Recordings(612,entry, datetime.now())
     db.session.add(recording)
     db.session.commit()
 
