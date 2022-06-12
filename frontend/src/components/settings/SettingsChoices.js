@@ -46,6 +46,7 @@ const SettingsChoices = () => {
             camera_password, camera_address, camera_settings } = document.forms[0];
 
         axios.post(('/edit_camera/' + camera_id.value), {
+            
             'name': camera_name.value,
             'username':camera_username.value,
             'password':camera_password.value,

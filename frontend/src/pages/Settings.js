@@ -10,13 +10,13 @@ const Settings = () => {
 
 
 
-return (
-	<div className="container">
-		<div className="form-holder">
-			<SettingsChoices />
+	return (
+		<div className="container">
+			<div className="form-holder">
+				<SettingsChoices />
+			</div>
 		</div>
-	</div>
-);
+	);
 
 };
 
