@@ -82,9 +82,10 @@ def serve_playback():
 
     # latest_recording = Recordings.query(func.max(Recordings.id)).first()
     print(latest_recording[1])
-    temp = json.dumps(latest_recording[1].playback)
+    temp = json.loads(latest_recording[1])
 
-    return { 'recordings' : temp }
+
+    return { 'recordings' : temp.playback }
 
 
 
